@@ -220,6 +220,45 @@ textarea.paste{width:100%;min-height:80px;border:1.5px solid var(--line);border-
 .out.err{color:#C23A1C}
 .out .ph{color:var(--mute)}
 
+/* sfide di codice */
+.les.ch .dot{border-style:dashed}
+.les.ch.cur .dot{background:var(--ink);color:var(--acc);border:1.5px solid var(--ink)}
+.les.ch.cur .dot svg,.les.ch .dot svg{width:20px;height:20px}
+.req{background:var(--card);border-radius:14px;padding:12px 14px 4px;margin-bottom:16px}
+.req>b{display:block;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.req .pts{margin-bottom:8px}
+.crow{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
+.crow .btn+.btn{margin-top:0}
+.box.hint{background:#EEF6D5}
+.box.hint>b{color:#5A7A00}
+.box.sol{background:var(--card);border:1.5px solid var(--line)}
+.box.sol>b{color:var(--mute)}
+.box.sol .code{margin:8px 0}
+.rhead{font-weight:650;font-size:17px;margin:6px 0 8px;display:flex;align-items:center;gap:8px}
+.rhead.ok{color:#4C7A00}
+.rhead.ko{color:#B23A1C}
+.tlist{list-style:none;display:flex;flex-direction:column;gap:4px;margin-bottom:12px;font-size:14.5px}
+.tlist li.ok{color:#3F6600}
+.tlist li.ko{color:#B23A1C}
+.tlist li{padding-left:1.3em;text-indent:-1.3em}
+.tlist .errbox{margin-top:6px;color:var(--ink);text-indent:0}
+.tdetail{background:var(--card);border-radius:14px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.tdetail code{font-family:'Geist Mono',monospace;font-size:13px;background:var(--bg);padding:1px 5px;border-radius:5px;word-break:break-all}
+pre.code.small{font-size:12.5px;padding:10px 12px;margin:2px 0 6px;border-radius:10px;white-space:pre-wrap}
+.errbox{background:var(--badbg);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14.5px}
+.errbox>b{display:block;color:#B23A1C;font-family:'Geist Mono',monospace;font-size:13px;margin-bottom:2px;word-break:break-word}
+.errbox .where{font-size:13.5px;margin:2px 0}
+.errbox .tip{font-size:14.5px}
+.errbox code{font-family:'Geist Mono',monospace;font-size:12.5px;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:5px}
+.out .errbox{font-family:'Geist',system-ui,sans-serif;white-space:normal}
+.cmdwrap{position:relative}
+.cmdwrap pre.code{padding-top:40px;white-space:pre-wrap;overflow-wrap:anywhere}
+.copyb{position:absolute;top:8px;right:8px;background:#2B2D24;color:#E9EBE2;border-radius:8px;padding:5px 10px;font-size:12px;font-family:'Geist Mono',monospace}
+textarea.ans{resize:vertical;margin-bottom:12px;min-height:52px;font-size:15px}
+details.stdin{margin:0 0 12px;background:var(--card);border-radius:12px;padding:10px 14px}
+details.stdin summary{cursor:pointer;font-size:14px;color:var(--mute)}
+details.stdin textarea{margin-bottom:0}
+
 /* finestre e avvisi */
 .modal{position:fixed;inset:0;z-index:30;background:rgba(18,19,16,.45);display:flex;align-items:flex-end;justify-content:center;padding:0}
 .sheet{background:var(--bg);width:100%;max-width:560px;max-height:85dvh;overflow-y:auto;border-radius:24px 24px 0 0;padding:24px 20px calc(env(safe-area-inset-bottom) + 20px);animation:up .25s ease-out}

@@ -101,6 +101,45 @@ git push --tags      # i tag vanno inviati a parte`, note: "Su GitHub, da un tag
         { t: "fill", q: "Segna questa versione.", code: `git ___ v0.1.0`, bank: ["tag", "label", "version"], ans: ["tag"], why: "Su GitHub, da un tag puoi creare una release." },
         { t: "info", title: "Pull request", text: "Una **pull request** (PR) è una proposta di unire un branch in un altro su GitHub. Mostra le differenze, permette di commentarle riga per riga, e si unisce con un clic quando va bene.\n\nÈ il modo standard per contribuire ai progetti degli altri, ma è utile anche da soli: ti obbliga a rileggere le modifiche prima di portarle su `main`." },
         { t: "mc", q: "Cos’è una pull request?", opts: ["Una proposta di unire un branch, con revisione e commenti", "Un modo per scaricare", "Un commit urgente"], a: 0, why: "È il modo standard per contribuire ai progetti degli altri." }
+    ]},
+    { id: "gt7s", kind: "sfida", title: "Missione · La tua prima repository", sub: "Commit e .gitignore dal vivo", ex: [
+        { t: "info", title: "Come funziona una missione", text: "Le missioni si svolgono **sul tuo computer**, perché Git non può girare dentro l’app. Segui le istruzioni, esegui i comandi e **incolla il risultato** nel riquadro: l’app controlla se è corretto.\n\nCome nelle sfide hai a disposizione suggerimenti e, dopo un paio di tentativi, la soluzione." },
+        { t: "info", title: "Installare Git", text: "**Mac**: scrivi `git --version` nel Terminale; se non c’è, il Mac ti propone di installarlo. **Windows**: installa Git da git-scm.com (include Git Bash). **Linux**: con il gestore di pacchetti (es. `sudo apt install git`).\n\nPoi, una volta sola, configura nome ed email:", code: `git config --global user.name "Il tuo nome"
+git config --global user.email "tua@email.it"` },
+        {
+          t: "task",
+          q: "Due commit",
+          text: "Crea una repository, fai **due commit**, poi conta quanti commit ci sono nella storia.",
+          points: ["Esegui i comandi qui sopra: fanno il **primo** commit.", "Poi modifica `README.md` (per esempio aggiungi una riga con `echo \"altra riga\" >> README.md`) e fai **tu** il secondo commit.", "Infine esegui `git log --oneline | wc -l` e scrivi il risultato."],
+          code: `mkdir -p ~/elica-missioni/prima-repo
+cd ~/elica-missioni/prima-repo
+git init
+echo "# Il mio progetto" > README.md
+git add README.md
+git commit -m "Primo commit"`,
+          ans: ["2"],
+          hints: ["Dopo aver modificato il file, `git status` ti mostra che è cambiato.", "Per il secondo commit servono due comandi: `git add README.md` e `git commit -m \"…\"`.", "`git log --oneline` mostra un commit per riga, `wc -l` conta le righe."],
+          solution: `echo "altra riga" >> README.md
+git add README.md
+git commit -m "Aggiunge una riga al README"
+git log --oneline | wc -l`,
+          why: "L’ultimo comando stampa `2`. Ogni `git commit` aggiunge una “fotografia” alla storia; senza `git add` prima, il commit non avrebbe nulla da salvare."
+        },
+        {
+          t: "task",
+          q: "Ignorare i risultati",
+          text: "Sempre nella stessa repository, crea una cartella di risultati e un `.gitignore` che la escluda. Poi guarda cosa vede Git.",
+          points: ["Esegui i comandi e incolla l’output di `git status --short`."],
+          code: `mkdir -p results
+echo "dati" > results/tabella.tsv
+echo "results/" > .gitignore
+git status --short`,
+          ans: ["?? .gitignore"],
+          multiline: true,
+          hints: ["`git status --short` mostra una riga per file, con `??` per i file non tracciati.", "Se vedi anche `results/`, controlla il contenuto di `.gitignore` con `cat .gitignore`."],
+          solution: `git status --short`,
+          why: "L’output è `?? .gitignore`: Git mostra solo `.gitignore`, ancora da aggiungere, perché la cartella `results/` è ignorata. Ricordati di fare il commit anche di `.gitignore`."
+        }
     ]}
   ]}
   ]

@@ -57,6 +57,43 @@ print("".join(["A", "T", "G"]))   # ATG` },
         { t: "mc", q: "Cosa restituisce comp[\"G\"]?", code: `comp = {"A": "T", "T": "A", "C": "G", "G": "C"}`, opts: ["C", "G", "T"], mono: 1, a: 0, why: "Un dizionario restituisce il valore associato alla chiave." },
         { t: "mc", q: "Cosa restituisce?", code: `"".join(["A", "T", "G"])`, opts: ["\"A T G\"", "\"ATG\"", "[\"A\",\"T\",\"G\"]"], mono: 1, a: 1, why: "join unisce gli elementi usando la stringa iniziale (vuota) come separatore." },
         { t: "type", q: "Scrivi cosa stampa.", code: `print("ATTG"[::-1])`, ans: ["GTTA"], why: "Lo slicing con passo -1 inverte la stringa." }
+    ]},
+    { id: "b3s", kind: "sfida", title: "Sfida · Sequenze", sub: "Un complemento inverso robusto", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Complemento inverso robusto",
+          mode: "func",
+          func: "revcomp",
+          text: "Nei file reali le sequenze possono contenere minuscole e la lettera `N` (base sconosciuta). Scrivi un complemento inverso che le gestisce, e che rifiuta i caratteri non validi.",
+          points: ["`revcomp(seq)` restituisce il complemento inverso in **maiuscolo**.", "`N` resta `N`.", "Se trova un carattere diverso da A, C, G, T, N solleva `ValueError`.", "Una sequenza vuota dà una stringa vuota."],
+          starter: `COMP = {"A": "T", "T": "A", "C": "G", "G": "C", "N": "N"}
+
+
+def revcomp(seq):
+    pass
+`,
+          tests: [
+            {"call":"revcomp(\"ATGC\")","expect":"\"GCAT\""},
+            {"call":"revcomp(\"atgc\")","expect":"\"GCAT\"","desc":"minuscole"},
+            {"call":"revcomp(\"ANNT\")","expect":"\"ANNT\"","desc":"le N restano N"},
+            {"call":"revcomp(\"\")","expect":"\"\"","desc":"sequenza vuota"},
+            {"call":"revcomp(\"ATGX\")","raises":"ValueError","desc":"carattere non valido → ValueError"}
+          ],
+          hints: ["Scorri le basi al contrario: `for b in reversed(seq.upper()):`.", "Prima di usare `COMP[b]`, controlla `if b not in COMP:` e in quel caso `raise ValueError(\"base non valida\")`.", "Costruisci il risultato aggiungendo una lettera alla volta: `risultato += COMP[b]`."],
+          solution: `COMP = {"A": "T", "T": "A", "C": "G", "G": "C", "N": "N"}
+
+
+def revcomp(seq):
+    risultato = ""
+    for b in reversed(seq.upper()):
+        if b not in COMP:
+            raise ValueError(f"base non valida: {b}")
+        risultato += COMP[b]
+    return risultato
+`,
+          why: "Senza il controllo, un carattere strano causerebbe un `KeyError` poco chiaro. Sollevare un `ValueError` con un messaggio preciso aiuta chi usa la funzione a capire cosa non va."
+        }
     ]}
   ]},
   { title: "Dal gene alla proteina", lessons: [
@@ -123,6 +160,55 @@ print("ACGT".find("TTT"))        # -1` },
         { t: "info", title: "Contare i codoni", text: "Un ORF ha una lunghezza multipla di 3: dividendo la lunghezza per 3 con `//` ottieni il numero di codoni, stop compreso.", code: `orf = "ATGAAATAG"
 print(len(orf) // 3)   # 3 codoni` },
         { t: "type", q: "Quanti codoni ci sono? Scrivi cosa stampa.", code: `print(len("ATGAAATAG") // 3)`, ans: ["3"], why: "9 basi / 3 = 3 codoni." }
+    ]},
+    { id: "b6s", kind: "sfida", title: "Sfida · Dal gene alla proteina", sub: "Traduci fino al codone di stop", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Traduzione fino allo stop",
+          mode: "func",
+          func: "traduci",
+          text: "Il codice iniziale costruisce già la tabella del **codice genetico** completo: `TABELLA[\"ATG\"]` vale `\"M\"`, e i codoni di stop valgono `\"*\"`. Scrivi la funzione che traduce.",
+          points: ["`traduci(dna)` legge il DNA a codoni **dalla prima base**.", "Si ferma al primo codone di stop, che **non** va incluso nel risultato.", "Un ultimo pezzo di meno di 3 basi si ignora.", "Deve funzionare anche con le minuscole."],
+          starter: `BASI = "TCAG"
+AA = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
+TABELLA = {a + b + c: AA[16 * i + 4 * j + k]
+           for i, a in enumerate(BASI)
+           for j, b in enumerate(BASI)
+           for k, c in enumerate(BASI)}
+
+
+def traduci(dna):
+    pass
+`,
+          tests: [
+            {"call":"traduci(\"ATGGCCTAA\")","expect":"\"MA\""},
+            {"call":"traduci(\"ATGGCC\")","expect":"\"MA\"","desc":"senza stop"},
+            {"call":"traduci(\"atgaaatttTAGCCC\")","expect":"\"MKF\"","desc":"minuscole, si ferma al TAG"},
+            {"call":"traduci(\"ATGGC\")","expect":"\"M\"","desc":"codone finale incompleto"},
+            {"call":"traduci(\"TAA\")","expect":"\"\"","desc":"subito uno stop"}
+          ],
+          hints: ["Converti in maiuscolo e scorri a passi di 3: `for i in range(0, len(dna) - 2, 3):`.", "Prendi l’amminoacido con `aa = TABELLA[dna[i:i+3]]`.", "Se `aa == \"*\"` usa `break`; altrimenti aggiungilo: `proteina += aa`."],
+          solution: `BASI = "TCAG"
+AA = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG"
+TABELLA = {a + b + c: AA[16 * i + 4 * j + k]
+           for i, a in enumerate(BASI)
+           for j, b in enumerate(BASI)
+           for k, c in enumerate(BASI)}
+
+
+def traduci(dna):
+    dna = dna.upper()
+    proteina = ""
+    for i in range(0, len(dna) - 2, 3):
+        aa = TABELLA[dna[i:i+3]]
+        if aa == "*":
+            break
+        proteina += aa
+    return proteina
+`,
+          why: "`range(0, len(dna) - 2, 3)` si ferma prima di un pezzo incompleto. `break` esce dal ciclo al primo stop, come fa il ribosoma."
+        }
     ]}
   ]},
   { title: "Confrontare sequenze", lessons: [
@@ -160,6 +246,65 @@ conteggi = Counter(seq[i:i+k] for i in range(len(seq) - k + 1))
 print(conteggi["ACGT"])          # 2
 print(conteggi.most_common(1))   # [('ACGT', 2)]` },
         { t: "mc", q: "Cosa fa Counter.most_common(3)?", opts: ["Restituisce i 3 elementi più frequenti con i conteggi", "Conta fino a 3", "Toglie i 3 più rari"], a: 0, why: "Restituisce una lista di coppie (elemento, conteggio)." }
+    ]},
+    { id: "b8s", kind: "sfida", title: "Sfida · Confrontare sequenze", sub: "Hamming e k-mer", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Distanza di Hamming sicura",
+          mode: "func",
+          func: "hamming",
+          text: "Scrivi la distanza di Hamming tra due sequenze, controllando che si possano confrontare.",
+          points: ["`hamming(a, b)` restituisce il numero di posizioni diverse.", "Maiuscole e minuscole non contano (`\"a\"` è uguale ad `\"A\"`).", "Se le lunghezze sono diverse, solleva `ValueError`."],
+          starter: `def hamming(a, b):
+    pass
+`,
+          tests: [
+            {"call":"hamming(\"GAGCCTACTAACGGGAT\", \"CATCGTAATGACGGCCT\")","expect":"7"},
+            {"call":"hamming(\"ACGT\", \"acgt\")","expect":"0","desc":"maiuscole e minuscole"},
+            {"call":"hamming(\"A\", \"G\")","expect":"1"},
+            {"call":"hamming(\"\", \"\")","expect":"0"},
+            {"call":"hamming(\"AC\", \"A\")","raises":"ValueError","desc":"lunghezze diverse → ValueError"}
+          ],
+          hints: ["Prima di tutto: `if len(a) != len(b): raise ValueError(\"lunghezze diverse\")`.", "Normalizza con `upper()` entrambe le sequenze.", "`sum(x != y for x, y in zip(a, b))` conta le posizioni diverse."],
+          solution: `def hamming(a, b):
+    if len(a) != len(b):
+        raise ValueError("lunghezze diverse")
+    a, b = a.upper(), b.upper()
+    return sum(x != y for x, y in zip(a, b))
+`,
+          why: "`zip` si ferma alla sequenza più corta: senza il controllo sulle lunghezze, un confronto sbagliato passerebbe in silenzio. Meglio sollevare un errore esplicito."
+        },
+        {
+          t: "code",
+          q: "Il k-mer più frequente",
+          mode: "func",
+          func: "kmer_piu_frequente",
+          text: "Scrivi una funzione che trova il k-mer che compare più volte in una sequenza.",
+          points: ["`kmer_piu_frequente(seq, k)` restituisce il k-mer più frequente.", "In caso di parità, restituisce quello che viene **prima in ordine alfabetico**."],
+          starter: `from collections import Counter
+
+
+def kmer_piu_frequente(seq, k):
+    pass
+`,
+          tests: [
+            {"call":"kmer_piu_frequente(\"AAAAT\", 2)","expect":"\"AA\""},
+            {"call":"kmer_piu_frequente(\"GATTACA\", 1)","expect":"\"A\""},
+            {"call":"kmer_piu_frequente(\"ACGTACGTAC\", 4)","expect":"\"ACGT\"","desc":"parità: vince l’ordine alfabetico"},
+            {"call":"kmer_piu_frequente(\"TTTGGGTTT\", 3)","expect":"\"TTT\""}
+          ],
+          hints: ["Conta i k-mer con `Counter(seq[i:i+k] for i in range(len(seq) - k + 1))`.", "Il conteggio massimo è `max(conteggi.values())`.", "Tra quelli con il conteggio massimo, `min(...)` dà il primo in ordine alfabetico: `min(km for km, n in conteggi.items() if n == massimo)`."],
+          solution: `from collections import Counter
+
+
+def kmer_piu_frequente(seq, k):
+    conteggi = Counter(seq[i:i+k] for i in range(len(seq) - k + 1))
+    massimo = max(conteggi.values())
+    return min(km for km, n in conteggi.items() if n == massimo)
+`,
+          why: "`max` trova il valore più alto; poi si filtrano i k-mer che lo raggiungono e `min` sceglie il primo in ordine alfabetico. Gestire la parità in modo esplicito rende il risultato sempre lo stesso."
+        }
     ]}
   ]},
   { title: "Strumenti reali", lessons: [

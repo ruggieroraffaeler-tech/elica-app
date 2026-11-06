@@ -8,7 +8,7 @@ Uso:  python3 tools/build.py
 2. Crea dist/elica-portable.html: tutta l'app in un unico file, da aprire
    con doppio clic anche senza internet (utile su PC o come copia di sicurezza).
 """
-import base64, hashlib, pathlib, re, sys
+import base64, hashlib, json, pathlib, re, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PATTERNS = ['index.html', 'manifest.webmanifest', 'css/*.css', 'js/*.js', 'content/*.js', 'fonts/*.woff2', 'icons/*.png']
@@ -72,7 +72,15 @@ def build_portable():
     return dist / 'elica-portable.html'
 
 
+def build_harness():
+    # incorpora il correttore Python (tools/harness.py) in js/pyharness.js
+    src = (ROOT / 'tools/harness.py').read_text(encoding='utf-8')
+    js = "/* Generato da tools/build.py a partire da tools/harness.py: non modificare a mano. */\nELICA.PY_HARNESS = " + json.dumps(src, ensure_ascii=False) + ";\n"
+    (ROOT / 'js/pyharness.js').write_text(js, encoding='utf-8')
+
+
 if __name__ == '__main__':
+    build_harness()
     files = app_files()
     v = update_sw(files, app_version())
     p = build_portable()

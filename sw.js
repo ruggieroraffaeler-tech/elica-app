@@ -1,6 +1,6 @@
 /* Elica — service worker: rende l'app disponibile offline e gestisce gli aggiornamenti.
    VERSION e FILES vengono riscritti da tools/build.py: non modificarli a mano. */
-const VERSION = '3.1.0-aa515f5b';
+const VERSION = '3.2.0-1b1133a3';
 const FILES = [
   './',
   'index.html',
@@ -8,6 +8,7 @@ const FILES = [
   'css/style.css',
   'js/app.js',
   'js/core.js',
+  'js/pyharness.js',
   'js/version.js',
   'content/10-python.js',
   'content/20-palestra.js',

@@ -35,6 +35,7 @@ const I = {
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
   redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 3.5v5h5"/></svg>',
   close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg>',
   helix: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2c0 6 10 6 10 10S7 16 7 22M17 2c0 6-10 6-10 10s10 4 10 10"/><path d="M9 5.5h6M9 18.5h6" stroke-width="1.5"/></svg>',
   cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/></svg>'
@@ -56,7 +57,10 @@ COURSES.forEach(c => c.units.forEach(u => u.lessons.forEach(l => {
 const allLessons = c => c ? c.units.flatMap(u => u.lessons) : [];
 const course = id => COURSES.find(c => c.id === id);
 const isQ = ex => ex.t !== 'info';
-const courseDone = id => { const c = course(id); return !!c && allLessons(c).every(l => S.done[l.id]); };
+const isCh = l => l && l.kind === 'sfida';                       // lezione "Sfida" (codice o missione)
+const isHeavy = ex => ex.t === 'code' || ex.t === 'task';         // esercizi lunghi: fuori da sessioni e ripassi veloci
+const courseDone = id => { const c = course(id); return !!c && allLessons(c).filter(l => !isCh(l)).every(l => S.done[l.id]); };
+const allChallenges = () => COURSES.flatMap(c => allLessons(c).filter(isCh));
 
 /* ---------- stato ---------- */
 const DEV = (() => { try { let d = localStorage.getItem('elica-device'); if (!d) { d = Math.random().toString(36).slice(2, 10); localStorage.setItem('elica-device', d); } return d; } catch (e) { return 'local'; } })();
@@ -106,7 +110,7 @@ const dayXp = () => S.day === today() ? S.dayXp : 0;
 function addXp(n) { if (S.day !== today()) { S.day = today(); S.dayXp = 0; } S.dayXp += n; S.xpd[DEV] = (S.xpd[DEV] || 0) + n; S.xp = Object.values(S.xpd).reduce((a, b) => a + b, 0); }
 function bumpStreak() { if (S.last !== today()) { S.streak = S.last === today() - 1 ? S.streak + 1 : 1; S.last = today(); } }
 const locked = c => !!(c && c.req && !S.done[c.req.lesson] && !S.peek[c.id]);
-const nextLesson = c => allLessons(c).find(l => !S.done[l.id]);
+const nextLesson = c => allLessons(c).find(l => !S.done[l.id] && !isCh(l));
 
 /* errori e ripasso programmato */
 function errItems() {
@@ -116,8 +120,8 @@ function errItems() {
 const errCount = () => errItems().length;
 function noteErr(k) { const v = S.err[k] || { n: 0, ts: Date.now() }; v.n++; v.ts = Date.now(); S.err[k] = v; }
 function clearErr(k) { if (S.err[k]) { delete S.err[k]; S.clr[k] = Date.now(); return true; } return false; }
-function srsHit(k) { const v = S.srs[k] || { b: -1 }; v.b = Math.min(v.b + 1, SRS.length - 1); v.due = today() + SRS[v.b]; v.t = Date.now(); S.srs[k] = v; }
-function srsMiss(k) { S.srs[k] = { b: 0, due: today() + 1, t: Date.now() }; }
+function srsHit(k) { if (XIDX[k] && isHeavy(XIDX[k].ex)) return; const v = S.srs[k] || { b: -1 }; v.b = Math.min(v.b + 1, SRS.length - 1); v.due = today() + SRS[v.b]; v.t = Date.now(); S.srs[k] = v; }
+function srsMiss(k) { if (XIDX[k] && isHeavy(XIDX[k].ex)) return; S.srs[k] = { b: 0, due: today() + 1, t: Date.now() }; }
 const dueKeys = () => Object.entries(S.srs).filter(([k, v]) => XIDX[k] && v.due <= today() && !S.err[k])
   .sort((a, b) => a[1].due - b[1].due || a[1].b - b[1].b).map(([k]) => k);
 const dueSoon = () => Object.entries(S.srs).filter(([k, v]) => XIDX[k] && v.due > today() && v.due <= today() + 7).length;
@@ -144,6 +148,9 @@ const BADGES = [
   { id: 'review', ic: '↺', name: 'Primo ripasso errori' },
   { id: 'clean', ic: '0', name: 'Nessun errore da ripassare' },
   { id: 'sync', ic: 'gh', name: 'Sincronizzato con GitHub' },
+  { id: 'ch1', ic: '{ }', name: 'Prima sfida superata' },
+  { id: 'ch5', ic: '5{}', name: '5 sfide superate' },
+  { id: 'chall', ic: '★', name: 'Tutte le sfide superate' },
   { id: 'all', ic: '∞', name: 'Tutti i corsi completati' }
 ];
 function award(ctx = {}) {
@@ -159,6 +166,8 @@ function award(ctx = {}) {
   if (S.done.p6b) add('unlock');
   if (['py', 'r', 'sh', 'git'].every(id => allLessons(course(id)).some(l => S.done[l.id]))) add('poly');
   if (COURSES.every(c => courseDone(c.id))) add('all');
+  const chDone = allChallenges().filter(l => S.done[l.id]).length;
+  if (chDone >= 1) add('ch1'); if (chDone >= 5) add('ch5'); if (chDone && chDone === allChallenges().length) add('chall');
   if (S.tried.includes('lab')) add('lab');
   if (S.tried.includes('sync')) add('sync');
   if (ctx.review) add('review');
@@ -169,7 +178,7 @@ function award(ctx = {}) {
 /* ---------- sessione del giorno ---------- */
 function sessionPlan() {
   const long = S.sessLen === 'long';
-  const errs = errItems().slice(0, long ? 4 : 3).map(e => e.k);
+  const errs = errItems().filter(e => !isHeavy(e.ex)).slice(0, long ? 4 : 3).map(e => e.k);
   const due = dueKeys().filter(k => !errs.includes(k)).slice(0, long ? 5 : 3);
   let c = course(S.course);
   if (!c || locked(c) || !nextLesson(c)) c = COURSES.find(x => !locked(x) && nextLesson(x));
@@ -177,7 +186,7 @@ function sessionPlan() {
   let extra = [];
   if (!nl) {
     const pool = [];
-    COURSES.forEach(cc => allLessons(cc).forEach(l => { if (S.done[l.id]) l.ex.forEach(ex => { if (isQ(ex) && !errs.includes(ex.k) && !due.includes(ex.k)) pool.push(ex.k); }); }));
+    COURSES.forEach(cc => allLessons(cc).forEach(l => { if (S.done[l.id]) l.ex.forEach(ex => { if (isQ(ex) && !isHeavy(ex) && !errs.includes(ex.k) && !due.includes(ex.k)) pool.push(ex.k); }); }));
     extra = shuffle(pool).slice(0, long ? 10 : 7);
   }
   const n = errs.length + due.length + extra.length + (nl ? nl.ex.length : 0);
@@ -230,18 +239,20 @@ function pathHTML() {
     h += `<div class="lockp"><b>${I.lock}${S.peek[c.id] ? 'In anteprima' : 'Bloccato'}</b><p>Si sblocca completando ${escH(c.req.label)}. ${need.length - d ? `Mancano ${need.length - d} lezioni.` : ''}</p><div class="bar"><i style="width:${need.length ? d / need.length * 100 : 0}%"></i></div>
       ${S.peek[c.id] ? '' : `<button class="linkb" data-act="peek" data-id="${c.id}">Voglio dare un’occhiata lo stesso</button>`}</div>`;
   }
-  const ls = allLessons(c), firstOpen = ls.findIndex(l => !S.done[l.id]);
+  const ls = allLessons(c), firstOpen = ls.findIndex(l => !S.done[l.id] && !isCh(l));
   let idx = 0;
   c.units.forEach((u, ui) => {
     const ud = u.lessons.filter(l => S.done[l.id]).length;
     h += `<div class="unit"><div class="unit-t">${u.title.startsWith('Settimana') ? escH(u.title) : `Unità ${ui + 1} · ${escH(u.title)}`} · ${ud}/${u.lessons.length}</div><div class="path">`;
     u.lessons.forEach(l => {
-      const i = idx++, done = !!S.done[l.id], cur = !lk && i === firstOpen, lock = lk || (!done && !cur);
+      const i = idx++, done = !!S.done[l.id], ch = isCh(l);
+      const open = ch && !lk && !done && (firstOpen === -1 || i < firstOpen);
+      const cur = !lk && !ch && i === firstOpen, lock = lk || (!done && !cur && !open);
       const canRead = !lock && l.ex.some(e => e.t === 'info');
-      h += `<div class="lrow"><button class="les ${done && !lk ? 'done' : cur ? 'cur' : 'lock'}" ${lock ? 'disabled' : ''} data-act="lesson" data-id="${l.id}">
-        <span class="dot">${done && !lk ? I.check : lock ? I.lock : String(i + 1).padStart(2, '0')}</span>
-        <span><div class="t">${escH(l.title)}</div><div class="s">${escH(l.sub)}${done ? ' · ripassa' : ''}</div></span>
-        ${cur ? '<span class="go">Inizia</span>' : ''}</button>${canRead ? `<button class="thb" data-act="theory" data-id="${l.id}" title="Rileggi la teoria" aria-label="Rileggi la teoria di ${escA(l.title)}">${I.book}</button>` : ''}</div>`;
+      h += `<div class="lrow"><button class="les ${ch ? 'ch' : ''} ${done && !lk ? 'done' : cur || open ? 'cur' : 'lock'}" ${lock ? 'disabled' : ''} data-act="lesson" data-id="${l.id}">
+        <span class="dot">${done && !lk ? I.check : lock ? I.lock : ch ? I.code : String(i + 1).padStart(2, '0')}</span>
+        <span><div class="t">${escH(l.title)}</div><div class="s">${escH(l.sub)}${done ? ' · rifai' : ''}</div></span>
+        ${cur ? '<span class="go">Inizia</span>' : open ? '<span class="go">Prova</span>' : ''}</button>${canRead ? `<button class="thb" data-act="theory" data-id="${l.id}" title="Rileggi la teoria" aria-label="Rileggi la teoria di ${escA(l.title)}">${I.book}</button>` : ''}</div>`;
     });
     h += '</div></div>';
   });
@@ -250,20 +261,21 @@ function pathHTML() {
 }
 
 function reviewHTML() {
-  const it = errItems(), due = dueKeys();
+  const all = errItems(), it = all.filter(e => !isHeavy(e.ex)), heavy = all.filter(e => isHeavy(e.ex)), due = dueKeys();
+  const chList = heavy.length ? `<div class="sect">Sfide da riprovare · ${heavy.length}</div>` + [...new Map(heavy.map(e => [e.l.id, e])).values()].map(e => `<div class="lrow"><button class="les cur ch" data-act="lesson" data-id="${e.l.id}"><span class="dot">${I.code}</span><span><div class="t">${escH(e.l.title)}</div><div class="s">${escH(e.c.name)} · ${escH(e.ex.q || '')}</div></span><span class="go">Riprova</span></button></div>`).join('') : '';
   let h = `<div class="h1">Ripasso</div><div class="sub">Gli esercizi sbagliati restano qui finché non li indovini al primo tentativo. Quelli giusti tornano a intervalli crescenti (1, 2, 4, 8… giorni) per fissarli nella memoria. Il ripasso non consuma vite.</div>
   <div class="grid2"><div class="card"><div class="goal-row"><span>Errori da ripassare</span><b>${it.length}</b></div>
     ${it.length ? `<button class="btn acc" style="margin-top:14px" data-act="review-err">Ripassa ${Math.min(10, it.length)} errori</button>` : `<div class="note">Nessun errore in sospeso.</div>`}</div>
   <div class="card"><div class="goal-row"><span>Ripassi in scadenza oggi</span><b>${due.length}</b></div><div class="goal-row" style="margin-top:6px"><span>Nei prossimi 7 giorni</span><b>${dueSoon()}</b></div>
     ${due.length ? `<button class="btn" style="margin-top:14px" data-act="review-due">Ripassa ora</button>` : ''}</div></div>`;
-  if (!it.length) return h + `<div class="empty"><div class="bi">${I.check}</div><b style="color:var(--ink)">Nessun errore da ripassare</b><div style="margin-top:4px;font-size:14px">Gli esercizi sbagliati nelle lezioni compariranno qui.</div></div>`;
+  if (!it.length) return h + chList + `<div class="empty"><div class="bi">${I.check}</div><b style="color:var(--ink)">Nessun errore da ripassare</b><div style="margin-top:4px;font-size:14px">Gli esercizi sbagliati nelle lezioni compariranno qui.</div></div>`;
   const groups = {};
   it.forEach(e => (groups[e.c.id] = groups[e.c.id] || []).push(e));
   COURSES.forEach(c => {
     const g = groups[c.id]; if (!g) return;
     h += `<div class="sect">${escH(c.name)} · ${g.length}</div>` + g.map(e => `<div class="err-i"><div class="m"><span>${escH(e.l.title)}</span><span class="mono">${e.n}× sbagliato</span></div><div class="x">${escH(e.ex.q || '')}</div>${e.ex.code ? `<div class="cd">${escH(e.ex.code.split('\n')[0])}</div>` : e.ex.lines ? `<div class="cd">${escH(e.ex.lines[0])}</div>` : ''}</div>`).join('');
   });
-  return h;
+  return h + chList;
 }
 
 /* ---------- lezione ---------- */
@@ -279,12 +291,12 @@ function begin(cfg) {
 function startLesson(lid) {
   tick();
   const r = LIDX[lid]; if (!r || locked(r.c)) return;
-  const isNew = !S.done[lid];
-  if (isNew && S.hearts <= 0) { L = { phase: 'nohearts', costs: true }; openLesson(); noHearts(); return; }
-  begin({ mode: 'lesson', items: r.l.ex.map(ex => ({ ex, k: ex.k, src: 'new' })), costs: isNew, isNew, lessonId: lid });
+  const isNew = !S.done[lid], ch = isCh(r.l);
+  if (isNew && !ch && S.hearts <= 0) { L = { phase: 'nohearts', costs: true }; openLesson(); noHearts(); return; }
+  begin({ mode: 'lesson', items: r.l.ex.map(ex => ({ ex, k: ex.k, src: 'new' })), costs: isNew && !ch, isNew, ch, lessonId: lid });
 }
 function startReview(kind) {
-  const keys = kind === 'due' ? dueKeys().slice(0, 12) : errItems().slice(0, 10).map(e => e.k);
+  const keys = kind === 'due' ? dueKeys().slice(0, 12) : errItems().filter(e => !isHeavy(e.ex)).slice(0, 10).map(e => e.k);
   if (!keys.length) return;
   begin({ mode: 'review', kind, items: keys.map(k => ({ ex: XIDX[k].ex, k, src: kind })), costs: false });
 }
@@ -303,7 +315,7 @@ function openLesson() { $('#lesson').classList.remove('hidden'); document.body.s
 function closeLesson() { $('#lesson').classList.add('hidden'); document.body.style.overflow = ''; L = null; render(); maybeSync(); }
 function hud() {
   $('#lprog').style.width = (L && L.items ? L.ok / L.items.length * 100 : 0) + '%';
-  $('#lhearts').innerHTML = L && L.costs ? `<span class="h">${I.heart}</span>${S.hearts}` : `<span style="font-size:12px;color:var(--mute)">${L && L.mode === 'session' ? 'sessione' : 'ripasso'}</span>`;
+  $('#lhearts').innerHTML = L && L.costs ? `<span class="h">${I.heart}</span>${S.hearts}` : `<span style="font-size:12px;color:var(--mute)">${L && L.ch ? 'sfida' : L && L.mode === 'session' ? 'sessione' : 'ripasso'}</span>`;
 }
 function setFoot(cls, label, dis) { LF.className = 'l-foot' + (cls ? ' ' + cls : ''); BTN.textContent = label; BTN.disabled = !!dis; }
 
@@ -322,7 +334,7 @@ function showIntro() {
 
 function showEx() {
   const it = cur(), ex = it.ex; L.phase = 'ask'; FB.innerHTML = ''; hud();
-  const kinds = { info: 'Teoria', mc: 'Scegli', fill: 'Completa il codice', order: 'Riordina le righe', type: 'Scrivi la risposta', bug: 'Trova il bug' };
+  const kinds = { info: 'Teoria', mc: 'Scegli', fill: 'Completa il codice', order: 'Riordina le righe', type: 'Scrivi la risposta', bug: 'Trova il bug', code: 'Sfida di codice', task: 'Missione sul tuo computer' };
   const origin = it.src !== 'new' ? ` · ${escH(XIDX[it.k] ? XIDX[it.k].l.title : '')}` : '';
   const tag = it.src === 'err' ? '<span class="tag err">Errore</span>' : it.src === 'due' ? '<span class="tag">Ripasso</span>' : '';
   let h = `<div class="pop"><div class="kind">${tag}<span>${kinds[ex.t] || ''}${origin}</span></div><div class="q">${escH(ex.t === 'info' ? ex.title : ex.q)}</div>`;
@@ -354,7 +366,9 @@ function showEx() {
     h += `<div class="buglines">${ex.lines.map((ln, i) => `<button class="bl" data-i="${i}"><span class="no">${i + 1}</span><span>${hl(ln) || ' '}</span></button>`).join('')}</div><div class="hint">Tocca la riga che contiene l’errore.</div>`;
     setFoot('', 'Verifica', true);
   }
+  if (ex.t === 'code' || ex.t === 'task') { h += challengeHTML(ex, it.k); setFoot('', ex.t === 'code' ? 'Verifica' : 'Controlla', false); }
   LB.innerHTML = h + '</div>'; LB.scrollTop = 0;
+  if (ex.t === 'code' || ex.t === 'task') bindChallenge(ex, it.k);
   if (ex.t === 'mc') LB.querySelectorAll('.opt').forEach(b => b.onclick = () => { if (L.phase !== 'ask') return; LB.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); L.state.sel = +b.dataset.i; setFoot('', 'Verifica', false); });
   if (ex.t === 'bug') LB.querySelectorAll('.bl').forEach(b => b.onclick = () => { if (L.phase !== 'ask') return; LB.querySelectorAll('.bl').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); L.state.sel = +b.dataset.i; setFoot('', 'Verifica', false); });
   if (ex.t === 'fill') drawFill(ex);
@@ -425,6 +439,7 @@ $('#lx').onclick = closeLesson;
 
 function check() {
   const it = cur(), ex = it.ex, qi = L.queue[L.pos];
+  if (ex.t === 'code' || ex.t === 'task') { checkChallenge(it, qi); return; }
   let right = false, sol = '';
   if (ex.t === 'mc') { right = L.state.sel === ex.a; sol = `Risposta corretta: <code>${escH(ex.opts[ex.a])}</code>`; LB.querySelectorAll('.opt').forEach(b => { if (+b.dataset.i === ex.a) b.classList.add('right'); }); }
   if (ex.t === 'fill') { right = L.state.fill.every((v, i) => ex.bank[v] === ex.ans[i]); sol = 'Soluzione: ' + ex.ans.map(a => `<code>${escH(a)}</code>`).join(' '); }
@@ -462,7 +477,8 @@ function finish() {
   const ctx = {}, notes = [];
   let gained = 0;
   if (L.mode === 'lesson') {
-    if (L.isNew) { gained = 10 + (L.mistakes === 0 ? 5 : 0); S.done[L.lessonId] = Date.now(); ctx.perfect = L.mistakes === 0; }
+    if (L.isNew && L.ch) { gained = 25 + (L.mistakes === 0 ? 5 : 0); S.done[L.lessonId] = Date.now(); notes.push('Sfida superata'); }
+    else if (L.isNew) { gained = 10 + (L.mistakes === 0 ? 5 : 0); S.done[L.lessonId] = Date.now(); ctx.perfect = L.mistakes === 0; }
     else { gained = 5; S.hearts = Math.min(HMAX, S.hearts + 1); notes.push('+1 vita per il ripasso'); }
   } else if (L.mode === 'review') {
     gained = 5 + 2 * L.cleared; S.hearts = Math.min(HMAX, S.hearts + 1); ctx.review = L.kind === 'err';
@@ -478,7 +494,7 @@ function finish() {
   addXp(gained); bumpStreak();
   const nb = award(ctx); save(); persistStorage();
   const tot = L.items.filter(i => isQ(i.ex)).length, acc = tot ? Math.round(tot / (tot + L.mistakes) * 100) : 100;
-  const title = { lesson: L.isNew ? 'Lezione completata' : 'Ripasso completato', review: 'Ripasso completato', session: 'Sessione di oggi completata' }[L.mode];
+  const title = { lesson: L.ch ? 'Sfida completata' : L.isNew ? 'Lezione completata' : 'Ripasso completato', review: 'Ripasso completato', session: 'Sessione di oggi completata' }[L.mode];
   L.phase = 'end'; $('#lprog').style.width = '100%';
   LB.innerHTML = `<div class="center pop"><div class="kind">${title}</div><div class="big">+${gained} XP</div>
     <div class="sumgrid"><div class="sum"><b>${acc}%</b><span>precisione</span></div><div class="sum"><b>${S.streak}</b><span>giorni di fila</span></div><div class="sum"><b>${Math.min(S.dayXp, S.goal)}/${S.goal}</b><span>obiettivo</span></div></div>
@@ -513,50 +529,291 @@ const SNIPPETS = [
   { name: 'Eccezioni', code: `def gc(seq):\n    if not seq:\n        raise ValueError("sequenza vuota")\n    return (seq.count("G") + seq.count("C")) / len(seq)\n\nfor s in ["GGCA", ""]:\n    try:\n        print(s, gc(s))\n    except ValueError as e:\n        print("errore:", e)` },
   { name: 'Classi', code: `class Sequenza:\n    def __init__(self, nome, seq):\n        self.nome = nome\n        self.seq = seq.upper()\n\n    def gc(self):\n        return (self.seq.count("G") + self.seq.count("C")) / len(self.seq)\n\n    def __str__(self):\n        return f"{self.nome} ({len(self.seq)} bp, GC {self.gc():.0%})"\n\nprint(Sequenza("gene1", "atgcgcgatt"))` }
 ];
-let py = null, pyLoading = null, labCode = null;
+/* ---------- Python in un Web Worker ----------
+   Il codice gira in un thread separato: se si blocca (ciclo infinito) lo fermiamo
+   dopo qualche secondo senza bloccare l'app. Il "correttore" è in tools/harness.py. */
+const PY_URL = window.__PYODIDE_URL__ || 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+const WORKER_SRC = `
+let py = null, booting = null;
+self.onmessage = async (e) => {
+  const m = e.data;
+  try {
+    if (!py) {
+      if (!booting) booting = (async () => {
+        importScripts(m.url + 'pyodide.js');
+        const p = await loadPyodide({ indexURL: m.url });
+        p.runPython(m.harness);
+        return p;
+      })();
+      py = await booting;
+    }
+    if (m.kind === 'boot') { postMessage({ id: m.id, ok: true }); return; }
+    py.globals.set('__elica_req', m.req);
+    postMessage({ id: m.id, ok: true, result: py.runPython('__elica_handle(__elica_req)') });
+  } catch (err) {
+    booting = booting && py ? booting : null;
+    postMessage({ id: m.id, ok: false, error: String((err && err.message) || err) });
+  }
+};`;
+const PYW = { w: null, booted: false, seq: 0, pend: {} };
+function pyKill() {
+  if (PYW.w) PYW.w.terminate();
+  PYW.w = null; PYW.booted = false;
+  for (const k in PYW.pend) { clearTimeout(PYW.pend[k].t); PYW.pend[k].rej(new Error('ANNULLATO')); }
+  PYW.pend = {};
+}
+function pyWorker() {
+  if (PYW.w) return PYW.w;
+  const w = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })));
+  w.onmessage = e => { const p = PYW.pend[e.data.id]; if (!p) return; delete PYW.pend[e.data.id]; clearTimeout(p.t); e.data.ok ? p.res(e.data.result) : p.rej(new Error(e.data.error)); };
+  w.onerror = ev => { if (ev.preventDefault) ev.preventDefault(); const err = new Error('DOWNLOAD'); for (const k in PYW.pend) { clearTimeout(PYW.pend[k].t); PYW.pend[k].rej(err); } PYW.pend = {}; pyKill(); };
+  PYW.w = w; return w;
+}
+function pySend(msg, ms) {
+  return new Promise((res, rej) => {
+    const id = ++PYW.seq;
+    const t = setTimeout(() => { delete PYW.pend[id]; pyKill(); rej(new Error('TIMEOUT')); }, ms);
+    PYW.pend[id] = { res, rej, t };
+    pyWorker().postMessage(Object.assign({ id, url: PY_URL, harness: E.PY_HARNESS }, msg));
+  });
+}
+async function pyBoot() {
+  if (PYW.booted) return;
+  try { await pySend({ kind: 'boot' }, 120000); } catch (e) { throw new Error(e.message === 'TIMEOUT' ? 'DOWNLOAD' : e.message); }
+  PYW.booted = true;
+}
+async function pyRun(req, ms) { await pyBoot(); return JSON.parse(await pySend({ kind: 'run', req: JSON.stringify(req) }, ms)); }
+const pyFail = (e, secs) => e.message === 'TIMEOUT'
+  ? `<div class="errbox"><b>Il programma non è terminato entro ${secs} secondi</b><div class="tip">Probabilmente c’è un <b>ciclo infinito</b>: un <code>while</code> la cui condizione non diventa mai falsa (hai aggiornato la variabile? c’è un <code>break</code>?), oppure un <code>input()</code> in più. Python è stato riavviato.</div></div>`
+  : `<div class="errbox"><b>Non riesco ad avviare Python</b><div class="tip">La prima volta serve internet per scaricarlo (circa 10 MB). Controlla la connessione e riprova.</div></div>`;
+
+/* ---------- il suggeritore: errori spiegati in italiano ---------- */
+function explainErr(e) {
+  if (!e) return '';
+  const m = e.msg || '', C = x => `<code>${escH(x)}</code>`;
+  let tip = '';
+  switch (e.type) {
+    case 'SyntaxError':
+      tip = /expected ':'/.test(m) ? `Mancano i due punti ${C(':')} alla fine di ${C('if')}, ${C('for')}, ${C('while')}, ${C('def')} o ${C('class')}.`
+        : /unterminated string|EOL|EOF while scanning/.test(m) ? 'Una stringa non è chiusa: controlla le virgolette.'
+        : /never closed|unmatched|does not match/.test(m) ? 'Una parentesi non è chiusa, oppure ce n’è una di troppo.'
+        : /Maybe you meant '==' or ':=' instead of '='|cannot assign/.test(m) ? `Nei confronti si usa ${C('==')}, non ${C('=')}.`
+        : 'Python non riesce a leggere questa riga: controlla parentesi, virgolette, due punti e operatori.';
+      break;
+    case 'IndentationError': case 'TabError':
+      tip = /expected an indented block/.test(m) ? 'Dopo i due punti il blocco va rientrato di 4 spazi.' : 'Le righe dello stesso blocco devono essere rientrate allo stesso modo (usa sempre 4 spazi).'; break;
+    case 'NameError': { const n = (m.match(/name '(.+?)'/) || [])[1] || '?'; tip = `Il nome ${C(n)} non esiste: forse è scritto in modo diverso (maiuscole comprese), non l’hai ancora definito, o manca un ${C('import')}.`; break; }
+    case 'TypeError':
+      tip = /can only concatenate str/.test(m) ? `Stai unendo testo e numero con ${C('+')}: converti il numero con ${C('str()')} oppure usa una f-string.`
+        : /unsupported operand|not supported between/.test(m) ? `Operazione tra tipi incompatibili (per esempio testo e numero). Controlla i tipi con ${C('type()')}: forse manca un ${C('int()')}.`
+        : /not callable/.test(m) ? 'Stai “chiamando” con le parentesi qualcosa che non è una funzione.'
+        : /missing \d+ required positional argument/.test(m) ? 'Hai chiamato una funzione con meno argomenti di quelli che richiede.'
+        : /takes \d+ positional argument/.test(m) ? `Hai passato più argomenti di quelli accettati (nei metodi il primo parametro dev’essere ${C('self')}).`
+        : /not subscriptable/.test(m) ? `Usi le parentesi quadre su un valore che non le supporta (spesso è ${C('None')}: una funzione senza ${C('return')}?).`
+        : /not iterable/.test(m) ? `Stai scorrendo con ${C('for')} qualcosa che non è una sequenza (forse un numero: serve ${C('range()')}?).`
+        : 'Il tipo di un valore non va bene per questa operazione.';
+      break;
+    case 'ValueError':
+      tip = /invalid literal for int/.test(m) ? `${C('int()')} ha ricevuto un testo che non è un numero intero.`
+        : /unpack/.test(m) ? 'Il numero di variabili a sinistra non corrisponde al numero di valori.'
+        : 'Un valore ha il tipo giusto ma un contenuto non valido.'; break;
+    case 'IndexError': tip = `Indice fuori dai limiti: gli indici vanno da 0 a ${C('len(...) - 1')}. Controlla i ${C('range')} e le stringhe vuote.`; break;
+    case 'KeyError': tip = `La chiave ${C(m)} non è nel dizionario: aggiungila prima, oppure usa ${C('.get()')}.`; break;
+    case 'ZeroDivisionError': tip = `Divisione per zero: controlla che il divisore (per esempio ${C('len(seq)')}) non sia 0.`; break;
+    case 'AttributeError': tip = /NoneType/.test(m) ? `Stai usando un metodo su ${C('None')}: forse una funzione non restituisce niente.` : 'Questo valore non ha quel metodo o attributo: controlla il nome e il tipo del valore.'; break;
+    case 'UnboundLocalError': tip = 'Usi una variabile prima di averle dato un valore: inizializzala prima del ciclo o dell’if.'; break;
+    case 'AssertionError': tip = m ? escH(m) : `Un ${C('assert')} è fallito: la condizione era falsa.`; break;
+    case 'FileNotFoundError': tip = 'Non esiste un file con questo nome: controlla il percorso che ricevi come parametro.'; break;
+    case 'RecursionError': tip = 'Una funzione chiama sé stessa all’infinito.'; break;
+    case 'RuntimeError': tip = escH(m); break;
+  }
+  const head = e.type === 'RuntimeError' ? 'Attenzione' : escH(e.type) + (m && e.type !== 'AssertionError' ? ': ' + escH(m) : '');
+  return `<div class="errbox"><b>${head}</b>${e.line ? `<div class="where">Riga ${e.line}${e.text ? `: <code>${escH(e.text)}</code>` : ''}</div>` : ''}${tip ? `<div class="tip">${tip}</div>` : ''}</div>`;
+}
+
+/* ---------- Lab ---------- */
+let labCode = null, labIn = '';
 function labHTML() {
   if (labCode === null) labCode = SNIPPETS[0].code;
   return `<div class="h1">Lab</div><div class="sub">Python vero, eseguito sul tuo dispositivo. Parti da un esempio o scrivi il tuo codice.</div>
   <div class="chips">${SNIPPETS.map((s, i) => `<button class="chip" data-s="${i}">${escH(s.name)}</button>`).join('')}</div>
-  <div class="editor"><textarea id="ed" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"></textarea>
-  <div class="keys">${['⇥', ':', '(', ')', '[', ']', '{', '}', '"', '=', '#', '.', ',', '_', '+', '-'].map(k => `<button data-k="${escA(k)}">${escH(k)}</button>`).join('')}</div></div>
+  ${editorHTML('ed')}
+  <details class="stdin"${labIn ? ' open' : ''}><summary>Input del programma (per <code>input()</code>)</summary><textarea id="labin" class="paste" placeholder="Una riga per ogni input()">${escH(labIn)}</textarea></details>
   <div class="row"><button class="btn" id="run">Esegui</button><button class="btn ghost" id="clr" style="flex:0 0 110px;min-width:0">Pulisci</button></div>
   <div class="out" id="out"><span class="ph">L’output apparirà qui.</span></div>
-  <div class="note">Il primo avvio scarica l’interprete Python (circa 10 MB) e richiede internet. Nell’app installata resta poi disponibile offline. Su PC: Ctrl/⌘ + Invio per eseguire.</div>`;
+  <div class="note">Il primo avvio scarica l’interprete Python (circa 10 MB) e richiede internet; nell’app installata resta poi disponibile offline. Se il codice gira per più di 10 secondi viene fermato. Su PC: Ctrl/⌘ + Invio per eseguire.</div>`;
+}
+const KEYS = ['⇥', ':', '(', ')', '[', ']', '{', '}', '"', '=', '#', '.', ',', '_', '+', '-', '<', '>'];
+const editorHTML = (id, rows) => `<div class="editor"><textarea id="${id}" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"${rows ? ` style="min-height:${rows}px"` : ''}></textarea>
+  <div class="keys">${KEYS.map(k => `<button data-k="${escA(k)}" data-for="${id}">${escH(k)}</button>`).join('')}</div></div>`;
+function bindEditor(ed, onChange, onRun) {
+  document.querySelectorAll(`[data-for="${ed.id}"]`).forEach(b => { b.onmousedown = e => e.preventDefault(); b.onclick = () => { const t = b.dataset.k === '⇥' ? '    ' : b.dataset.k; ed.setRangeText(t, ed.selectionStart, ed.selectionEnd, 'end'); onChange(ed.value); ed.focus(); }; });
+  ed.oninput = () => onChange(ed.value);
+  ed.onkeydown = e => {
+    if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); onChange(ed.value); }
+    else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onRun && onRun(); }
+    else if (e.key === 'Enter') {     // mantiene l'indentazione e aggiunge 4 spazi dopo i due punti
+      const st = ed.selectionStart, riga = ed.value.slice(0, st).split('\n').pop();
+      let ind = (riga.match(/^\s*/) || [''])[0];
+      if (/:\s*$/.test(riga)) ind += '    ';
+      e.preventDefault(); ed.setRangeText('\n' + ind, st, ed.selectionEnd, 'end'); onChange(ed.value);
+    }
+  };
 }
 function bindLab() {
-  const ed = $('#ed'); ed.value = labCode; ed.oninput = () => labCode = ed.value;
+  const ed = $('#ed'); ed.value = labCode;
+  bindEditor(ed, v => labCode = v, runLab);
+  const li = $('#labin'); li.oninput = () => labIn = li.value;
   document.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { labCode = ed.value = SNIPPETS[+b.dataset.s].code; $('#out').className = 'out'; $('#out').innerHTML = '<span class="ph">L’output apparirà qui.</span>'; });
-  document.querySelectorAll('[data-k]').forEach(b => { b.onmousedown = e => e.preventDefault(); b.onclick = () => { const t = b.dataset.k === '⇥' ? '    ' : b.dataset.k; ed.setRangeText(t, ed.selectionStart, ed.selectionEnd, 'end'); labCode = ed.value; ed.focus(); }; });
-  ed.onkeydown = e => {
-    if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); labCode = ed.value; }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); runLab(); }
-  };
   $('#clr').onclick = () => { labCode = ed.value = ''; ed.focus(); };
   $('#run').onclick = runLab;
 }
-function loadPy() {
-  if (pyLoading) return pyLoading;
-  const base = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
-  pyLoading = new Promise((res, rej) => {
-    const s = document.createElement('script'); s.src = base + 'pyodide.js';
-    s.onload = async () => { try { py = await window.loadPyodide({ indexURL: base }); res(py); } catch (e) { rej(e); } };
-    s.onerror = () => rej(new Error('download')); document.head.appendChild(s);
-  });
-  pyLoading.catch(() => { pyLoading = null; });
-  return pyLoading;
-}
 async function runLab() {
   const out = $('#out'), run = $('#run'); if (!out) return;
-  out.className = 'out';
-  if (!py) { out.innerHTML = '<span class="ph">Avvio Python…</span>'; run.disabled = true; }
-  try { await loadPy(); } catch (e) { out.className = 'out err'; out.textContent = 'Non riesco a scaricare Python. Controlla la connessione e riprova.'; run.disabled = false; return; }
-  run.disabled = true; const lines = [];
-  py.setStdout({ batched: s => lines.push(s) }); py.setStderr({ batched: s => lines.push(s) });
-  try { await py.runPythonAsync(labCode); out.textContent = lines.join('\n') || '(nessun output)'; }
-  catch (e) { out.className = 'out err'; const m = String(e.message || e).trim().split('\n'); out.textContent = (lines.length ? lines.join('\n') + '\n' : '') + m.slice(-2).join('\n'); }
+  out.className = 'out'; run.disabled = true;
+  if (!PYW.booted) out.innerHTML = '<span class="ph">Avvio Python…</span>';
+  try {
+    const r = await pyRun({ kind: 'run', code: labCode, stdin: labIn ? labIn.split('\n') : [] }, 10000);
+    let h = r.stdout ? escH(r.stdout) : (r.error ? '' : '<span class="ph">(nessun output)</span>');
+    if (r.input_finito) h += `<div class="errbox"><b>Il programma chiede un input()</b><div class="tip">Scrivi i valori nel riquadro “Input del programma”, uno per riga.</div></div>`;
+    if (r.error) h += explainErr(r.error);
+    out.innerHTML = h;
+  } catch (e) { out.innerHTML = pyFail(e, 10); }
   run.disabled = false;
   if (!S.tried.includes('lab')) { S.tried.push('lab'); award(); save(); }
+}
+
+/* ---------- sfide di codice e missioni ---------- */
+const DKEY = 'elica-drafts';
+const drafts = (() => { try { return JSON.parse(localStorage.getItem(DKEY) || '{}'); } catch (e) { return {}; } })();
+let draftTimer = null;
+const saveDraft = (k, v) => { drafts[k] = v; clearTimeout(draftTimer); draftTimer = setTimeout(() => { try { localStorage.setItem(DKEY, JSON.stringify(drafts)); } catch (e) {} }, 400); };
+
+function challengeHTML(ex, k) {
+  const nh = (ex.hints || []).length;
+  let h = `<div class="txt">${String(ex.text || '').split(/\n\s*\n/).map(p => `<p>${rich(p)}</p>`).join('')}</div>`;
+  if (ex.points) h += `<div class="req"><b>${ex.t === 'code' ? 'Requisiti' : 'Cosa fare'}</b><ul class="pts">${ex.points.map(p => `<li>${rich(p)}</li>`).join('')}</ul></div>`;
+  if (ex.t === 'code') {
+    h += editorHTML('ced', 230);
+    h += `<div class="note" style="margin:-4px 0 12px">Premi <b>Verifica</b>: il correttore prova il tuo codice su vari casi. Il codice resta salvato anche se esci.</div>`;
+  } else {
+    if (ex.code) h += `<div class="cmdwrap"><pre class="code">${hl(ex.code)}</pre><button class="copyb" data-copy>Copia</button></div>`;
+    h += `<textarea id="tans" class="inp ans" rows="${ex.multiline ? 3 : 1}" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="${ex.multiline ? 'Incolla qui il risultato' : 'Scrivi qui il risultato'}"></textarea>`;
+  }
+  h += `<div class="crow"><button class="btn ghost sm" id="chint" ${nh ? '' : 'disabled'}>Suggerimento <span id="chn">0/${nh}</span></button>
+    ${ex.t === 'code' ? '<button class="btn ghost sm" id="creset">Ricomincia</button>' : ''}
+    <button class="btn ghost sm" id="csolb">Soluzione</button></div>
+    <div id="chints"></div><div id="cres"></div><div id="csol"></div>`;
+  return h;
+}
+function bindChallenge(ex, k) {
+  L.state = { hints: 0, tries: 0, solArmed: false };
+  if (ex.t === 'code') {
+    const ed = $('#ced'); ed.value = drafts[k] ?? ex.starter ?? '';
+    bindEditor(ed, v => saveDraft(k, v), () => BTN.click());
+    $('#creset').onclick = () => twoTap($('#creset'), () => { ed.value = ex.starter || ''; saveDraft(k, ed.value); $('#cres').innerHTML = ''; });
+  } else {
+    const a = $('#tans'); a.value = drafts[k] || ''; a.oninput = () => saveDraft(k, a.value);
+    const cb = LB.querySelector('[data-copy]');
+    if (cb) cb.onclick = () => { try { navigator.clipboard.writeText(ex.code).then(() => toast('Comandi copiati'), () => toast('Seleziona il testo e copialo a mano')); } catch (e) { toast('Seleziona il testo e copialo a mano'); } };
+  }
+  $('#chint').onclick = () => {
+    const H = ex.hints || []; if (L.state.hints >= H.length) return;
+    L.state.hints++;
+    $('#chints').innerHTML = H.slice(0, L.state.hints).map((x, i) => `<div class="box hint"><b>Suggerimento ${i + 1}</b>${rich(x)}</div>`).join('');
+    $('#chn').textContent = `${L.state.hints}/${H.length}`;
+    if (L.state.hints >= H.length) $('#chint').disabled = true;
+  };
+  $('#csolb').onclick = () => {
+    if (L.state.tries < 2 && L.state.hints < (ex.hints || []).length) { toast('Prima prova almeno due volte o leggi tutti i suggerimenti'); return; }
+    twoTap($('#csolb'), () => {
+      const qi = L.queue[L.pos], it = cur();
+      if (!L.failed.has(qi)) { L.failed.add(qi); L.mistakes++; noteErr(it.k); save(); }
+      L.state.sawSol = true;
+      $('#csol').innerHTML = `<div class="box sol"><b>Una soluzione possibile</b>${ex.solution ? `<pre class="code">${hl(ex.solution)}</pre>` : ''}${ex.why ? `<div>${rich(ex.why)}</div>` : ''}<div class="note">Non copiarla: chiudila, riscrivila con parole tue e premi di nuovo ${ex.t === 'code' ? 'Verifica' : 'Controlla'}.</div></div>`;
+      $('#csolb').disabled = true;
+    });
+  };
+}
+async function checkChallenge(it, qi) {
+  const ex = it.ex;
+  let passed = false, html = '';
+  if (ex.t === 'task') {
+    const v = $('#tans').value;
+    if (!v.trim()) { toast('Scrivi prima il risultato'); return; }
+    passed = ex.ans.some(a => norm(a).toLowerCase() === norm(v).toLowerCase());
+    if (!passed) html = `<div class="errbox"><b>Non corrisponde al risultato atteso</b><div class="tip">Controlla di aver eseguito tutti i comandi nell’ordine e di aver copiato solo il risultato. ${(ex.hints || []).length ? 'Se sei bloccato, apri un suggerimento.' : ''}</div></div>`;
+  } else {
+    const code = $('#ced').value;
+    if (!code.trim()) { toast('Scrivi prima il codice'); return; }
+    BTN.disabled = true; BTN.textContent = PYW.booted ? 'Verifica in corso…' : 'Avvio Python…';
+    const secs = ex.mode === 'tests' ? 12 : 6;
+    try {
+      const r = await pyRun({ mode: ex.mode, code, func: ex.func, tests: ex.tests, files: ex.files, module: ex.module, impl: ex.impl, mutants: ex.mutants, min_tests: ex.min_tests }, secs * 1000);
+      ({ passed, html } = renderResults(ex, r));
+    } catch (e) { html = pyFail(e, secs); }
+  }
+  if (!L || cur() !== it) return;                       // lezione chiusa nel frattempo
+  if (passed) {
+    L.ok++; L.phase = 'fb';
+    // con la soluzione vista la sfida resta tra quelle da riprovare: va rifatta da soli più avanti
+    if (!L.state.sawSol && clearErr(it.k) && !L.failed.has(qi)) L.cleared++;
+    if (it.src !== 'new') L.reviewed++;
+    $('#cres').innerHTML = html;
+    FB.innerHTML = `<h3>${ex.t === 'code' ? 'Tutti i test superati' : 'Risultato corretto'}</h3><p>${L.state.sawSol ? 'Hai usato la soluzione: la ritrovi nel Ripasso, tra le sfide da riprovare. Rifalla da solo tra qualche giorno.' : ex.solution ? `Puoi confrontare ${ex.t === 'code' ? 'il tuo codice' : 'i tuoi comandi'} con una soluzione di riferimento.` : ''}</p>${ex.solution ? '<button class="fblink" id="cmpsol">Confronta con la nostra soluzione</button>' : ''}`;
+    const cs = $('#cmpsol'); if (cs) cs.onclick = () => { $('#csol').innerHTML = `<div class="box sol"><b>Una soluzione possibile</b><pre class="code">${hl(ex.solution)}</pre>${ex.why ? `<div>${rich(ex.why)}</div>` : ''}</div>`; $('#csol').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    setFoot('ok', 'Continua');
+  } else {
+    L.state.tries++;
+    if (!L.failed.has(qi)) { L.failed.add(qi); L.mistakes++; noteErr(it.k); }
+    $('#cres').innerHTML = html + (L.state.tries >= 2 && L.state.hints < (ex.hints || []).length ? `<div class="note">Bloccato? Prova un suggerimento.</div>` : '');
+    setFoot('', ex.t === 'code' ? 'Verifica' : 'Controlla', false);
+    $('#cres').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  save(); hud();
+}
+function renderResults(ex, r) {
+  const C = x => `<code>${escH(x)}</code>`;
+  if (r.load_error) return { passed: false, html: `<div class="rhead ko">Il codice non parte</div><div class="note" style="margin:0 0 8px">Correggi questo errore, poi riprova: i test non sono ancora stati eseguiti.</div>${explainErr(r.load_error)}` };
+  if (r.missing) return { passed: false, html: `<div class="rhead ko">Non trovo ${C(r.missing)}</div><div class="errbox"><div class="tip">Il nome deve essere esattamente ${C(r.missing)} (maiuscole comprese), definito con ${C(ex.func && /^[A-Z]/.test(ex.func) ? 'class' : 'def')} al livello principale del file, non dentro un’altra funzione.</div></div>` };
+  if (r.no_tests) return { passed: false, html: `<div class="rhead ko">Nessun test trovato</div><div class="errbox"><div class="tip">Le funzioni di test devono chiamarsi ${C('test_qualcosa')}, ed essere definite con ${C('def')} al livello principale del file.</div></div>` };
+  if (r.user_tests) {
+    const okCorr = r.user_tests.every(t => t.pass), caught = r.mutants.filter(m => m.caught).length, enough = r.n_tests >= r.min_tests;
+    const passed = okCorr && enough && caught === r.mutants.length;
+    let h = `<div class="rhead ${passed ? 'ok' : 'ko'}">${passed ? 'I tuoi test funzionano' : 'I tuoi test non sono ancora sufficienti'}</div><ul class="tlist">`;
+    h += r.user_tests.map(t => `<li class="${t.pass ? 'ok' : 'ko'}">${t.pass ? '✓' : '✗'} ${C(t.name)} ${t.pass ? 'passa sulla versione corretta' : 'fallisce anche sulla versione corretta'}${t.pass ? '' : explainErr(t.error)}</li>`).join('');
+    h += `<li class="${enough ? 'ok' : 'ko'}">${enough ? '✓' : '✗'} almeno ${r.min_tests} funzioni di test (ne hai ${r.n_tests})</li>`;
+    h += r.mutants.map(m => `<li class="${m.caught ? 'ok' : 'ko'}">${m.caught ? '✓ Scovata' : '✗ Non scovata'}: ${escH(m.desc)}</li>`).join('') + '</ul>';
+    if (!okCorr) h += `<div class="note">Un test che fallisce sulla versione corretta controlla un risultato sbagliato: ricalcola a mano il valore atteso.</div>`;
+    else if (caught < r.mutants.length) h += `<div class="note">Per scovare una versione sbagliata ti serve un ${C('assert')} che dia un risultato diverso proprio su quel difetto.</div>`;
+    return { passed, html: h };
+  }
+  const T = r.tests || [], ok = T.filter(t => t.pass).length, first = T.find(t => !t.pass);
+  let h = `<div class="rhead ${first ? 'ko' : 'ok'}">${ok} test superati su ${T.length}</div><ul class="tlist">` +
+    T.map(t => `<li class="${t.pass ? 'ok' : 'ko'}">${t.pass ? '✓' : '✗'} ${escH(t.desc || '')}</li>`).join('') + '</ul>';
+  if (first) {
+    h += `<div class="tdetail"><b>Primo test non superato</b>`;
+    if (ex.mode === 'func') {
+      h += `<div>Chiamata: ${C(first.call)}</div><div>Atteso: ${C(first.expect)}</div>`;
+      if (!first.error) h += `<div>Ottenuto: ${C(first.got)}</div>`;
+      let tip = '';
+      if (first.error) h += explainErr(first.error);
+      else if (first.no_raise) tip = `Doveva sollevare ${escH(first.expect)}: usa ${C('raise ValueError("…")')} quando i dati non vanno bene.`;
+      else if (first.got_none && first.printed) tip = `La funzione <b>stampa</b> il risultato ma non lo <b>restituisce</b>: usa ${C('return')} al posto di ${C('print')}.`;
+      else if (first.got_none) tip = `La funzione restituisce ${C('None')}: manca ${C('return')}, oppure il ${C('return')} non viene raggiunto in questo caso.`;
+      else if (first.got_type !== first.expect_type) tip = `Hai restituito ${escH(first.got_type)}, ma serve ${escH(first.expect_type)}.`;
+      if (tip) h += `<div class="errbox"><div class="tip">${tip}</div></div>`;
+    } else {
+      if (first.argv) h += `<div>Comando: ${C('python ' + first.argv.join(' '))}</div>`;
+      if (first.stdin && first.stdin.length) h += `<div>Input dato: ${first.stdin.map(C).join(', ')}</div>`;
+      h += `<div>Output atteso:</div><pre class="code small">${escH(first.expect)}</pre><div>Output ottenuto:</div><pre class="code small">${escH(first.got || '') || '(niente)'}</pre>`;
+      if (first.error) h += explainErr(first.error);
+      else if (first.input_finito) h += `<div class="errbox"><div class="tip">Il programma ha chiesto più ${C('input()')} di quelli previsti: forse il ciclo non si ferma quando l’input è valido.</div></div>`;
+      else h += `<div class="errbox"><div class="tip">Confronta riga per riga: spazi, maiuscole e punteggiatura contano. Stampa solo quello che è richiesto: i testi dentro ${C('input("…")')} non vengono controllati.</div></div>`;
+    }
+    h += '</div>';
+  }
+  return { passed: !first && T.length > 0, html: h };
 }
 
 /* ---------- backup ---------- */
@@ -686,7 +943,7 @@ function profileHTML() {
   <div class="grid2"><div class="card"><div class="lvl"><div><div class="note" style="margin:0">Livello</div><div class="big">${lvl}</div></div><div class="mono" style="font-size:14px;color:var(--mute)">${inLvl}/100 XP</div></div><div class="bar"><i style="width:${inLvl}%"></i></div></div>
   <div class="sumgrid four" style="margin:0"><div class="sum"><b>${streakNow()}</b><span>giorni di fila</span></div><div class="sum"><b>${S.xp}</b><span>XP totali</span></div><div class="sum"><b>${Object.keys(S.done).filter(k => LIDX[k]).length}</b><span>lezioni</span></div><div class="sum"><b>${sessTot}</b><span>sessioni</span></div></div></div>
   <div class="sect">Corsi</div><div class="card">`;
-  COURSES.forEach(c => { const ls = allLessons(c), d = ls.filter(l => S.done[l.id]).length; h += `<div class="prow"><div class="goal-row"><span>${escH(c.name)}</span><b>${d}/${ls.length}</b></div><div class="bar"><i style="width:${ls.length ? d / ls.length * 100 : 0}%"></i></div></div>`; });
+  COURSES.forEach(c => { const ls = allLessons(c).filter(l => !isCh(l)), chs = allLessons(c).filter(isCh), d = ls.filter(l => S.done[l.id]).length, dc = chs.filter(l => S.done[l.id]).length; h += `<div class="prow"><div class="goal-row"><span>${escH(c.name)}</span><b>${d}/${ls.length}${chs.length ? ` · sfide ${dc}/${chs.length}` : ''}</b></div><div class="bar"><i style="width:${ls.length ? d / ls.length * 100 : 0}%"></i></div></div>`; });
   h += `</div><div class="sect">Traguardi · ${S.badges.filter(b => BADGES.some(x => x.id === b)).length}/${BADGES.length}</div><div class="badges">${BADGES.map(b => `<div class="badge ${S.badges.includes(b.id) ? '' : 'off'}"><div class="bi">${escH(b.ic)}</div>${escH(b.name)}</div>`).join('')}</div>
   <div class="sect">Impostazioni</div><div class="card">
     <div class="set-row"><div class="lbl">Obiettivo giornaliero</div><div class="seg">${GOALS.map(g => `<button class="${S.goal === g ? 'on' : ''}" data-act="goal" data-id="${g}">${g} XP</button>`).join('')}</div></div>

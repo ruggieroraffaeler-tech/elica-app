@@ -142,6 +142,42 @@ print(len(record))   # 2` },
         { t: "fill", q: "Calcola le candidate.", code: `candidate = tutte ___ con_match`, bank: ["-", "&", "|"], ans: ["-"], why: "& è l’intersezione, | l’unione." },
         { t: "info", title: "Assente o solo nascosta?", text: "Una proteina senza match in B potrebbe essere **davvero assente**, oppure:", points: ["**molto divergente**: è lì, ma così cambiata che la ricerca veloce non la trova;", "**non annotata**: il gene c’è nel DNA di B, ma il programma di annotazione non l’ha riconosciuto, quindi non compare nel `.faa`."] },
         { t: "mc", q: "Una proteina di A senza match in B potrebbe essere…", opts: ["Davvero assente, oppure divergente o non annotata in B", "Sempre un fattore di virulenza", "Un errore di DIAMOND"], a: 0, why: "Per questo serve il passaggio successivo." }
+    ]},
+    { id: "pr6s", kind: "sfida", title: "Sfida · Il primo pezzo della pipeline", sub: "Dalle tabelle alle proteine specifiche", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Trova le proteine specifiche",
+          mode: "func",
+          func: "proteine_specifiche",
+          text: "Scrivi in Python puro, senza pandas né Biopython, il cuore della pipeline: dalle proteine di A e dalla tabella dei risultati di DIAMOND, trova le proteine di A **senza** un buon match.",
+          points: ["`proteine_specifiche(faa, tsv, min_ident)` riceve il percorso del FASTA delle proteine di A, il percorso della tabella `--outfmt 6` e l’identità minima.", "Un match è buono se `pident` (la **terza** colonna) è almeno `min_ident`.", "Restituisce la **lista ordinata** degli id delle proteine di A senza nessun match buono.", "La tabella è separata da tab; l’id della query è la prima colonna."],
+          starter: `def proteine_specifiche(faa, tsv, min_ident):
+    pass
+`,
+          files: {"A.faa":">p1 proteina 1\nMKV\n>p2\nMAL\n>p3\nMSS\n>p4\nMTT\n","hits.tsv":"p1\tb1\t98.5\t201\t3\t0\t1\t201\t1\t201\t1e-150\t400\np3\tb3\t35.0\t80\t52\t2\t1\t80\t5\t84\t1e-3\t40\np3\tb7\t45.0\t90\t49\t1\t1\t90\t1\t90\t1e-8\t60\np4\tb4\t39.9\t100\t60\t0\t1\t100\t1\t100\t1e-6\t50\n"},
+          tests: [
+            {"call":"proteine_specifiche(\"A.faa\", \"hits.tsv\", 40)","expect":"[\"p2\", \"p4\"]","desc":"soglia 40%"},
+            {"call":"proteine_specifiche(\"A.faa\", \"hits.tsv\", 30)","expect":"[\"p2\"]","desc":"soglia 30%"},
+            {"call":"proteine_specifiche(\"A.faa\", \"hits.tsv\", 99)","expect":"[\"p1\", \"p2\", \"p3\", \"p4\"]","desc":"soglia 99%"}
+          ],
+          hints: ["Leggi gli id dal FASTA: per ogni riga che inizia con `>`, aggiungi `riga[1:].split()[0]` a un insieme `tutte`.", "Per la tabella: `campi = riga.rstrip(\"\\n\").split(\"\\t\")`, poi `float(campi[2]) >= min_ident` → aggiungi `campi[0]` all’insieme `con_match`.", "Il risultato è `sorted(tutte - con_match)`."],
+          solution: `def proteine_specifiche(faa, tsv, min_ident):
+    tutte = set()
+    with open(faa) as f:
+        for riga in f:
+            if riga.startswith(">"):
+                tutte.add(riga[1:].split()[0])
+    con_match = set()
+    with open(tsv) as f:
+        for riga in f:
+            campi = riga.rstrip("\\n").split("\\t")
+            if len(campi) >= 3 and float(campi[2]) >= min_ident:
+                con_match.add(campi[0])
+    return sorted(tutte - con_match)
+`,
+          why: "Basta **un** match buono per togliere una proteina dalle candidate: per questo `p3` (un match al 35% e uno al 45%) con la soglia 40 è considerata presente. I valori letti dal file sono testo: `float()` serve per confrontarli come numeri."
+        }
     ]}
   ]},
   { title: "Iterazione e classificazione", lessons: [

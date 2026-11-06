@@ -161,6 +161,67 @@ match base:
         print("purina")
     case _:
         print("pirimidina")`, ans: ["pirimidina"], why: "T non è tra A e G, quindi scatta il caso _." }
+    ]},
+    { id: "p1s", kind: "sfida", title: "Sfida · Settimane 0–1", sub: "Funzioni, stringhe e condizioni", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Temperatura di melting",
+          mode: "func",
+          func: "tm",
+          text: "La **temperatura di melting** (Tm) di un primer è la temperatura a cui si stacca dal DNA. Per primer corti si stima con la *regola di Wallace*:\n\nTm = 2 × (numero di A + numero di T) + 4 × (numero di G + numero di C)",
+          points: ["Scrivi la funzione `tm(primer)` che **restituisce** (con `return`) la Tm come numero intero.", "Deve funzionare anche se il primer è scritto in minuscolo."],
+          starter: `def tm(primer):
+    # scrivi qui il tuo codice
+    pass
+`,
+          tests: [
+            {"call":"tm(\"ATGC\")","expect":"12"},
+            {"call":"tm(\"GGGG\")","expect":"16"},
+            {"call":"tm(\"AAAA\")","expect":"8"},
+            {"call":"tm(\"atgc\")","expect":"12","desc":"minuscole"},
+            {"call":"tm(\"ATGCATGCATGC\")","expect":"36"}
+          ],
+          hints: ["Conta ogni base con il metodo `count`: `primer.count(\"A\")` restituisce quante A ci sono.", "Per gestire le minuscole, all’inizio converti tutto in maiuscolo: `primer = primer.upper()`.", "Calcola `at = …` e `gc = …`, poi `return 2 * at + 4 * gc`. Ricorda: `return`, non `print`."],
+          solution: `def tm(primer):
+    primer = primer.upper()
+    at = primer.count("A") + primer.count("T")
+    gc = primer.count("G") + primer.count("C")
+    return 2 * at + 4 * gc
+`,
+          why: "Prima si normalizza con `upper()`, poi si contano le basi e si applica la formula. La funzione restituisce il valore, così chi la chiama può usarlo."
+        },
+        {
+          t: "code",
+          q: "Classifica il contenuto GC",
+          mode: "func",
+          func: "classifica_gc",
+          text: "Il contenuto GC è la frazione di basi G o C: (G + C) / lunghezza. Scrivi una funzione che classifica una sequenza in base al GC.",
+          points: ["`classifica_gc(seq)` restituisce la stringa `\"basso\"` se il GC è minore di 0.4,", "`\"medio\"` se è tra 0.4 e 0.6, **estremi compresi**,", "`\"alto\"` se è maggiore di 0.6.", "Deve funzionare anche con le minuscole."],
+          starter: `def classifica_gc(seq):
+    pass
+`,
+          tests: [
+            {"call":"classifica_gc(\"ATAT\")","expect":"\"basso\""},
+            {"call":"classifica_gc(\"ATGC\")","expect":"\"medio\""},
+            {"call":"classifica_gc(\"GGGC\")","expect":"\"alto\""},
+            {"call":"classifica_gc(\"AATTGGCCAT\")","expect":"\"medio\"","desc":"GC esattamente 0.4 → \"medio\""},
+            {"call":"classifica_gc(\"GGGCCCAAAA\")","expect":"\"medio\"","desc":"GC esattamente 0.6 → \"medio\""},
+            {"call":"classifica_gc(\"ggcc\")","expect":"\"alto\"","desc":"minuscole"}
+          ],
+          hints: ["Calcola prima il GC: `gc = (seq.count(\"G\") + seq.count(\"C\")) / len(seq)`, dopo aver fatto `upper()`.", "Usa `if`, `elif`, `else`. Attento ai bordi: 0.4 e 0.6 sono “medio”.", "Se il primo controllo è `gc < 0.4`, nel secondo basta `gc <= 0.6`: se arrivi lì, sai già che gc è almeno 0.4."],
+          solution: `def classifica_gc(seq):
+    seq = seq.upper()
+    gc = (seq.count("G") + seq.count("C")) / len(seq)
+    if gc < 0.4:
+        return "basso"
+    elif gc <= 0.6:
+        return "medio"
+    else:
+        return "alto"
+`,
+          why: "I rami di un `if/elif/else` si controllano in ordine: arrivati all’`elif` sai già che `gc` non è minore di 0.4, quindi basta controllare il limite superiore. Gli esercizi “ai bordi” (0.4 e 0.6) sono quelli dove si sbaglia più spesso."
+        }
     ]}
   ]},
   { title: "Settimana 2 · Cicli", lessons: [
@@ -313,6 +374,81 @@ except ValueError:
     print("errore")`, ans: ["13"], why: "\"12\" si converte senza problemi." },
         { t: "info", title: "Perché non catturare tutto", text: "Si può scrivere `except:` senza tipo, ma cattura **qualsiasi** errore, anche quelli che non ti aspetti, come un nome scritto male nel tuo codice. Il programma sembra funzionare ma nasconde i bug.\n\nMeglio indicare sempre il tipo (`except ValueError:`), o al massimo `except Exception as e:` stampando `e` per sapere cosa è successo." },
         { t: "mc", q: "Perché non scrivere solo except: senza tipo?", opts: ["Nasconde anche errori inattesi, rendendo difficile il debug", "È più lento", "Non è valido in Python"], a: 0, why: "Meglio catturare solo le eccezioni previste." }
+    ]},
+    { id: "p3s", kind: "sfida", title: "Sfida · Settimane 2–3", sub: "Cicli, dizionari ed eccezioni", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Conta le basi",
+          mode: "func",
+          func: "conta_basi",
+          text: "Scrivi una funzione che conta quante volte compare ogni base in una sequenza, usando un **ciclo** e un **dizionario**.",
+          points: ["`conta_basi(seq)` restituisce un dizionario con **sempre** le quattro chiavi `\"A\"`, `\"C\"`, `\"G\"`, `\"T\"`.", "Ogni valore è il numero di volte in cui compare quella base.", "Le minuscole contano come maiuscole; gli altri caratteri (per esempio `N`) si ignorano."],
+          starter: `def conta_basi(seq):
+    conteggi = {"A": 0, "C": 0, "G": 0, "T": 0}
+    # completa: scorri la sequenza e aggiorna i conteggi
+    return conteggi
+`,
+          tests: [
+            {"call":"conta_basi(\"ACGT\")","expect":"{\"A\": 1, \"C\": 1, \"G\": 1, \"T\": 1}"},
+            {"call":"conta_basi(\"GGGTTA\")","expect":"{\"A\": 1, \"C\": 0, \"G\": 3, \"T\": 2}"},
+            {"call":"conta_basi(\"aaN\")","expect":"{\"A\": 2, \"C\": 0, \"G\": 0, \"T\": 0}","desc":"minuscole e N"},
+            {"call":"conta_basi(\"\")","expect":"{\"A\": 0, \"C\": 0, \"G\": 0, \"T\": 0}","desc":"sequenza vuota"}
+          ],
+          hints: ["Scorri la sequenza con `for b in seq.upper():`.", "Prima di aggiornare, controlla che la base sia una delle quattro: `if b in conteggi:`.", "Per aumentare il conteggio: `conteggi[b] += 1`."],
+          solution: `def conta_basi(seq):
+    conteggi = {"A": 0, "C": 0, "G": 0, "T": 0}
+    for b in seq.upper():
+        if b in conteggi:
+            conteggi[b] += 1
+    return conteggi
+`,
+          why: "Il dizionario parte con tutte le chiavi a zero, così il risultato le contiene sempre. `b in conteggi` controlla se `b` è una delle chiavi: in questo modo `N` e gli altri caratteri vengono ignorati."
+        },
+        {
+          t: "code",
+          q: "Chiedi una lunghezza valida",
+          mode: "io",
+          text: "Scrivi un **programma completo** che chiede all’utente la lunghezza di un primer e la richiede finché non riceve un **intero positivo**. Poi stampa `Primer di N basi`.",
+          points: ["Usa `input()` per leggere (il testo tra parentesi non viene controllato).", "Se l’input non è un intero (per esempio `\"venti\"` o `\"3.5\"`) oppure è ≤ 0, richiedilo **senza stampare nient’altro**.", "Quando l’input è valido, stampa esattamente `Primer di 20 basi` (con il numero ricevuto)."],
+          starter: `def main():
+    n = chiedi_lunghezza()
+    print(f"Primer di {n} basi")
+
+
+def chiedi_lunghezza():
+    # completa con while True, try ed except
+    pass
+
+
+main()
+`,
+          tests: [
+            {"stdin":["20"],"out":"Primer di 20 basi","desc":"input valido subito"},
+            {"stdin":["venti","20"],"out":"Primer di 20 basi","desc":"prima un testo, poi un numero"},
+            {"stdin":["-3","0","18"],"out":"Primer di 18 basi","desc":"negativo e zero vengono rifiutati"},
+            {"stdin":["3.5","7"],"out":"Primer di 7 basi","desc":"un decimale non è un intero"}
+          ],
+          hints: ["Lo schema è `while True:` con dentro un `try`/`except ValueError`.", "Nel `try` converti: `n = int(input(\"Lunghezza? \"))`. Nell’`except ValueError:` scrivi `continue` per ricominciare il ciclo.", "Dopo il `try`, se `n > 0` fai `return n`: il return esce sia dalla funzione sia dal ciclo."],
+          solution: `def main():
+    n = chiedi_lunghezza()
+    print(f"Primer di {n} basi")
+
+
+def chiedi_lunghezza():
+    while True:
+        try:
+            n = int(input("Lunghezza? "))
+        except ValueError:
+            continue
+        if n > 0:
+            return n
+
+
+main()
+`,
+          why: "`int(\"venti\")` e `int(\"3.5\")` sollevano `ValueError`, che l’`except` intercetta: `continue` riparte dal `while`. Un intero ≤ 0 non solleva errori, quindi va controllato a parte con l’`if`."
+        }
     ]}
   ]},
   { title: "Settimana 4 · Librerie", lessons: [
@@ -404,6 +540,114 @@ def main():                    # solo input e output
 assert f("atg") == "ATG"
 print("ok")`, ans: ["ok"], why: "L’assert è vero, quindi il programma continua." },
         { t: "mc", q: "Come avvii i test?", opts: ["pytest test_gc.py", "python -test", "run tests"], mono: 1, a: 0, why: "Da terminale: pytest seguito dal file o dalla cartella." }
+    ]},
+    { id: "p5s", kind: "sfida", title: "Sfida · Settimane 4–5", sub: "Riga di comando e unit test", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Complemento inverso da riga di comando",
+          mode: "io",
+          text: "Scrivi un programma che riceve una sequenza **dalla riga di comando** e ne stampa il complemento inverso. Il correttore lo esegue come se scrivessi nel terminale `python rc.py ATGC`.",
+          points: ["Usa `sys.argv`: `sys.argv[1]` è la sequenza.", "Se gli argomenti non sono esattamente uno, termina con `sys.exit(\"Uso: python rc.py SEQUENZA\")`.", "Stampa il complemento inverso in **maiuscolo**, anche se la sequenza era minuscola (A↔T, C↔G, poi inverti)."],
+          starter: `import sys
+
+COMP = {"A": "T", "T": "A", "C": "G", "G": "C"}
+
+
+def main():
+    pass
+
+
+main()
+`,
+          tests: [
+            {"argv":["rc.py","ATGC"],"out":"GCAT"},
+            {"argv":["rc.py","aacg"],"out":"CGTT","desc":"minuscole"},
+            {"argv":["rc.py"],"out":"Uso: python rc.py SEQUENZA","desc":"nessun argomento"},
+            {"argv":["rc.py","A","T"],"out":"Uso: python rc.py SEQUENZA","desc":"troppi argomenti"}
+          ],
+          hints: ["`len(sys.argv)` dev’essere 2: il nome del programma più la sequenza.", "Se non lo è: `sys.exit(\"Uso: python rc.py SEQUENZA\")`. `sys.exit` stampa il messaggio e termina.", "Per il complemento inverso: `\"\".join(COMP[b] for b in reversed(seq.upper()))`."],
+          solution: `import sys
+
+COMP = {"A": "T", "T": "A", "C": "G", "G": "C"}
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.exit("Uso: python rc.py SEQUENZA")
+    print(revcomp(sys.argv[1]))
+
+
+def revcomp(seq):
+    return "".join(COMP[b] for b in reversed(seq.upper()))
+
+
+main()
+`,
+          why: "Controllare `len(sys.argv)` prima di leggere `sys.argv[1]` evita un `IndexError`. Mettere il calcolo in una funzione separata, `revcomp`, la rende riutilizzabile e testabile."
+        },
+        {
+          t: "code",
+          q: "Scrivi i test (come CS50)",
+          mode: "tests",
+          module: "gc_tools",
+          min_tests: 3,
+          text: "Questa volta il codice c’è già: il modulo `gc_tools` contiene una funzione `gc(seq)` che **non vedi**. Il tuo compito è scrivere i **test** che ne verificano il comportamento.\n\nIl correttore esegue i tuoi test sulla versione corretta, dove devono passare tutti, e su tre versioni **con un difetto nascosto**: per ognuna, almeno un tuo test deve fallire.",
+          points: ["`gc(seq)` restituisce la frazione di G e C, un numero decimale da 0 a 1 (per esempio `gc(\"ATGC\")` è `0.5`).", "Funziona anche con le minuscole.", "Solleva `ValueError` se la sequenza è vuota.", "Scrivi almeno 3 funzioni `test_…`."],
+          starter: `import pytest
+from gc_tools import gc
+
+
+def test_valori():
+    assert gc("GGCC") == 1.0
+    # aggiungi altri controlli e altre funzioni di test
+`,
+          impl: `def gc(seq):
+    if not seq:
+        raise ValueError("sequenza vuota")
+    seq = seq.upper()
+    return (seq.count("G") + seq.count("C")) / len(seq)
+`,
+          mutants: [
+            { desc: "una versione che usa la divisione intera // invece di /", code: `def gc(seq):
+    if not seq:
+        raise ValueError("sequenza vuota")
+    seq = seq.upper()
+    return (seq.count("G") + seq.count("C")) // len(seq)
+` },
+            { desc: "una versione che non gestisce le lettere minuscole", code: `def gc(seq):
+    if not seq:
+        raise ValueError("sequenza vuota")
+    return (seq.count("G") + seq.count("C")) / len(seq)
+` },
+            { desc: "una versione che con la sequenza vuota restituisce 0 invece di sollevare ValueError", code: `def gc(seq):
+    if not seq:
+        return 0.0
+    seq = seq.upper()
+    return (seq.count("G") + seq.count("C")) / len(seq)
+` }
+          ],
+          hints: ["Con `\"GGCC\"` la divisione intera dà comunque 1: ti serve un caso in cui il risultato **non** è intero, come `gc(\"ATGC\") == 0.5`.", "Per le minuscole: un test con `gc(\"ggcc\")`.", "Per l’errore: `with pytest.raises(ValueError):` e, rientrato sotto, `gc(\"\")`."],
+          solution: `import pytest
+from gc_tools import gc
+
+
+def test_valori():
+    assert gc("GGCC") == 1.0
+    assert gc("ATGC") == 0.5
+    assert gc("ATAT") == 0.0
+
+
+def test_minuscole():
+    assert gc("ggcc") == 1.0
+
+
+def test_vuota():
+    with pytest.raises(ValueError):
+        gc("")
+`,
+          why: "Un buon test è pensato per **scovare un errore preciso**: un risultato non intero per la divisione, le minuscole per la normalizzazione, la stringa vuota per il caso limite. Un test per ogni comportamento rende chiaro cosa si è rotto."
+        }
     ]}
   ]},
   { title: "Settimana 6 · File I/O", lessons: [
@@ -495,6 +739,75 @@ s = "ATGAAATAGCCCTAA"
 print(re.search(r"ATG(?:...)*(?:TAA|TAG|TGA)", s).group())    # avido: fino all'ultimo stop
 print(re.search(r"ATG(?:...)*?(?:TAA|TAG|TGA)", s).group())   # non avido: ATGAAATAG` },
         { t: "mc", q: "Quale regex trova un ATG seguito da codoni fino a uno stop?", opts: ["ATG(?:...)*?(?:TAA|TAG|TGA)", "ATG*TAA", "^TAA$"], mono: 1, a: 0, why: "(?:...)*? prende triplette in modo non avido fino al primo stop." }
+    ]},
+    { id: "p7s", kind: "sfida", title: "Sfida · Settimane 6–7", sub: "File e espressioni regolari", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Riassunto di un file FASTA",
+          mode: "func",
+          func: "riassunto_fasta",
+          text: "Scrivi una funzione che legge un file FASTA e restituisce la lunghezza di ogni sequenza.",
+          points: ["`riassunto_fasta(percorso)` restituisce un dizionario `{identificativo: lunghezza}`.", "L’identificativo è la prima parola dell’header, senza `>`.", "Una sequenza può essere spezzata su più righe: somma le lunghezze. Le righe vuote vanno ignorate.", "Un file vuoto dà un dizionario vuoto `{}`."],
+          starter: `def riassunto_fasta(percorso):
+    lunghezze = {}
+    # apri il file con with open(percorso) as f:
+    return lunghezze
+`,
+          tests: [
+            {"call":"riassunto_fasta(\"a.fa\")","expect":"{\"s1\": 6, \"s2\": 3}","desc":"due sequenze, una su più righe","files":{"a.fa":">s1 descrizione\nATGC\nGG\n>s2\nTTT\n"}},
+            {"call":"riassunto_fasta(\"b.fa\")","expect":"{\"x\": 4}","desc":"righe vuote in mezzo","files":{"b.fa":">x\nAC\n\nGT\n"}},
+            {"call":"riassunto_fasta(\"c.fa\")","expect":"{}","desc":"file vuoto","files":{"c.fa":""}}
+          ],
+          hints: ["Scorri le righe con `for riga in f:` e togli l’a capo con `riga = riga.strip()`. Se la riga è vuota, `continue`.", "Se la riga inizia con `>`: `nome = riga[1:].split()[0]` e `lunghezze[nome] = 0`.", "Altrimenti aggiungi la lunghezza della riga alla sequenza corrente: `lunghezze[nome] += len(riga)`."],
+          solution: `def riassunto_fasta(percorso):
+    lunghezze = {}
+    nome = None
+    with open(percorso) as f:
+        for riga in f:
+            riga = riga.strip()
+            if not riga:
+                continue
+            if riga.startswith(">"):
+                nome = riga[1:].split()[0]
+                lunghezze[nome] = 0
+            else:
+                lunghezze[nome] += len(riga)
+    return lunghezze
+`,
+          why: "La variabile `nome` ricorda qual è la sequenza corrente: è lo stesso schema “ricordare lo stato” della Palestra. `strip()` toglie l’a capo, che altrimenti verrebbe contato nella lunghezza."
+        },
+        {
+          t: "code",
+          q: "Valida un accession NCBI",
+          mode: "func",
+          func: "accession_valido",
+          text: "Gli accession degli assembly NCBI hanno una forma precisa, per esempio `GCF_000005845.2`. Scrivi una funzione che li valida con un’**espressione regolare**.",
+          points: ["Iniziano con `GCA_` oppure `GCF_` (in maiuscolo);", "seguono **esattamente 9 cifre**;", "poi un punto e il numero di versione (una o più cifre);", "nient’altro, prima o dopo.", "`accession_valido(s)` restituisce `True` o `False`."],
+          starter: `import re
+
+
+def accession_valido(s):
+    pass
+`,
+          tests: [
+            {"call":"accession_valido(\"GCF_000005845.2\")","expect":"True"},
+            {"call":"accession_valido(\"GCA_000008865.2\")","expect":"True"},
+            {"call":"accession_valido(\"GCF_5845.2\")","expect":"False","desc":"troppe poche cifre"},
+            {"call":"accession_valido(\"GCX_000005845.2\")","expect":"False","desc":"prefisso sbagliato"},
+            {"call":"accession_valido(\"GCF_000005845\")","expect":"False","desc":"manca la versione"},
+            {"call":"accession_valido(\"gcf_000005845.2\")","expect":"False","desc":"minuscole"},
+            {"call":"accession_valido(\" GCF_000005845.2\")","expect":"False","desc":"spazio all’inizio"}
+          ],
+          hints: ["`GC[AF]_` riconosce GCA_ o GCF_; `\\d{9}` esattamente 9 cifre; `\\.` un punto vero; `\\d+` una o più cifre.", "Ancora il pattern con `^` all’inizio e `$` alla fine, e scrivilo come stringa raw: `r\"…\"`.", "`re.search` restituisce un oggetto o `None`: per avere `True`/`False` scrivi `return re.search(…) is not None`."],
+          solution: `import re
+
+
+def accession_valido(s):
+    return re.search(r"^GC[AF]_\\d{9}\\.\\d+$", s) is not None
+`,
+          why: "Senza `^` e `$` il pattern verrebbe trovato anche dentro testi più lunghi. Il correttore vuole proprio `True` o `False`, non l’oggetto *match*: per questo il confronto con `None`."
+        }
     ]}
   ]},
   { title: "Settimana 8 · Programmazione a oggetti", lessons: [
@@ -627,6 +940,68 @@ print(a, b)               # 2 1` },
         { t: "info", title: "map e filter", text: "`map(funzione, sequenza)` applica la funzione a ogni elemento; `filter(funzione, sequenza)` tiene solo gli elementi per cui la funzione restituisce vero. Restituiscono un *iteratore*: per vedere tutti i valori trasformalo in lista con `list()`.\n\nSpesso una list comprehension fa la stessa cosa in modo più leggibile.", code: `print(list(map(str.upper, ["a", "t"])))          # ['A', 'T']
 print(list(filter(lambda n: n % 2 == 0, range(6))))  # [0, 2, 4]` },
         { t: "mc", q: "Cosa restituisce list(map(str.upper, [\"a\", \"t\"]))?", opts: ["[\"A\", \"T\"]", "\"AT\"", "[\"a\", \"t\"]"], mono: 1, a: 0, why: "map applica la funzione a ogni elemento." }
+    ]},
+    { id: "p9s", kind: "sfida", title: "Sfida · Settimane 8–9", sub: "Classi e comprehension", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "La classe Sequenza",
+          mode: "func",
+          func: "Sequenza",
+          text: "Scrivi una classe che rappresenta una sequenza di DNA e controlla che sia valida.",
+          points: ["`Sequenza(nome, seq)` salva gli attributi `nome` e `seq`; `seq` va salvata in **maiuscolo**.", "Se la sequenza contiene caratteri diversi da A, C, G, T, il costruttore solleva `ValueError`.", "Il metodo `gc()` restituisce la frazione di G e C.", "`str(oggetto)` restituisce per esempio `\"gene1 (6 bp)\"`."],
+          starter: `class Sequenza:
+    def __init__(self, nome, seq):
+        pass
+`,
+          tests: [
+            {"call":"Sequenza(\"x\", \"atgc\").seq","expect":"\"ATGC\"","desc":"seq salvata in maiuscolo"},
+            {"call":"Sequenza(\"x\", \"GGCA\").gc()","expect":"0.75"},
+            {"call":"Sequenza(\"x\", \"AAAA\").gc()","expect":"0.0"},
+            {"call":"str(Sequenza(\"gene1\", \"ATGCAT\"))","expect":"\"gene1 (6 bp)\""},
+            {"call":"Sequenza(\"x\", \"ATGX\")","raises":"ValueError","desc":"carattere non valido → ValueError"}
+          ],
+          hints: ["Nel costruttore: `seq = seq.upper()`, poi controlla con `if not all(b in \"ACGT\" for b in seq): raise ValueError(\"…\")`.", "Salva gli attributi con `self.nome = nome` e `self.seq = seq`. I metodi li leggono con `self.seq`.", "`__str__(self)` deve **restituire** una stringa: `return f\"{self.nome} ({len(self.seq)} bp)\"`."],
+          solution: `class Sequenza:
+    def __init__(self, nome, seq):
+        seq = seq.upper()
+        if not all(b in "ACGT" for b in seq):
+            raise ValueError("base non valida")
+        self.nome = nome
+        self.seq = seq
+
+    def gc(self):
+        return (self.seq.count("G") + self.seq.count("C")) / len(self.seq)
+
+    def __str__(self):
+        return f"{self.nome} ({len(self.seq)} bp)"
+`,
+          why: "Validare nel costruttore garantisce che ogni oggetto `Sequenza` esistente sia valido: gli altri metodi possono fidarsi di `self.seq`."
+        },
+        {
+          t: "code",
+          q: "k-mer in comune",
+          mode: "func",
+          func: "kmer_condivisi",
+          text: "Scrivi una funzione che trova i k-mer presenti in **entrambe** le sequenze, usando insiemi e comprehension.",
+          points: ["`kmer_condivisi(a, b, k)` restituisce la **lista ordinata** dei k-mer in comune, senza ripetizioni.", "Se non ce ne sono, restituisce una lista vuota."],
+          starter: `def kmer_condivisi(a, b, k):
+    pass
+`,
+          tests: [
+            {"call":"kmer_condivisi(\"ATGCA\", \"TGCAT\", 3)","expect":"[\"GCA\", \"TGC\"]"},
+            {"call":"kmer_condivisi(\"AAAA\", \"TTTT\", 2)","expect":"[]"},
+            {"call":"kmer_condivisi(\"ACGT\", \"ACGT\", 4)","expect":"[\"ACGT\"]"},
+            {"call":"kmer_condivisi(\"ACGTACGT\", \"CGTA\", 3)","expect":"[\"CGT\", \"GTA\"]","desc":"k-mer ripetuti contano una volta"}
+          ],
+          hints: ["I k-mer di `a`: `a[i:i+k] for i in range(len(a) - k + 1)`.", "Mettili in un insieme: `set(a[i:i+k] for i in range(len(a) - k + 1))`, e lo stesso per `b`.", "L’intersezione di due insiemi è `ka & kb`; `sorted(...)` la trasforma in una lista ordinata."],
+          solution: `def kmer_condivisi(a, b, k):
+    ka = {a[i:i+k] for i in range(len(a) - k + 1)}
+    kb = {b[i:i+k] for i in range(len(b) - k + 1)}
+    return sorted(ka & kb)
+`,
+          why: "Gli insiemi eliminano da soli i duplicati e rendono immediata l’intersezione. Le graffe con un `for` dentro sono una *set comprehension*, come la list comprehension ma per insiemi."
+        }
     ]}
   ]}
   ]

@@ -74,11 +74,13 @@ sw.js                   offline e aggiornamenti (generato in parte da tools/buil
 css/style.css           grafica
 js/core.js              registro dei corsi
 js/version.js           versione e novità
-js/app.js               motore: percorso, sessione, lezioni, ripasso, Lab, profilo, sync
+js/app.js               motore: percorso, sessione, lezioni, sfide, ripasso, Lab, profilo, sync
+js/pyharness.js         correttore delle sfide (generato da tools/build.py)
 content/NN-nome.js      un file per corso (NN = ordine)
 fonts/                  Geist e Geist Mono (licenza OFL)
 icons/                  icone dell'app
-tools/check.js          controllo dei contenuti
+tools/check.js          controllo dei contenuti (esegue anche le sfide con tools/check_sfide.py)
+tools/harness.py        correttore delle sfide (gira nel browser; copiato in js/pyharness.js da build.py)
 tools/build.py          preparazione per la pubblicazione
 ```
 
@@ -111,8 +113,20 @@ Gli `id` delle lezioni devono essere unici e **non vanno mai cambiati**, perché
 | `order` | `q`, `lines` (in ordine giusto) | riordina le righe |
 | `type` | `q`, `code`?, `ans` (lista di risposte accettate) | scrivi la risposta; spazi e a capo non contano |
 | `bug` | `q`, `lines`, `bad` (indice) | tocca la riga sbagliata |
+| `code` | `q`, `text`, `points`?, `mode`, `starter`, `hints`, `solution` + i campi della modalità | sfida di codice con correttore automatico (solo nelle lezioni `kind: 'sfida'`) |
+| `task` | `q`, `text`, `code`? (comandi da copiare), `points`?, `ans` (lista), `multiline`?, `hints`, `solution` | missione da svolgere sul proprio computer: si incolla il risultato |
 
 Nelle stringhe di codice usa `\n` per andare a capo e `\\n` per mostrare un `\n` letterale.
+
+**Sfide e missioni.** Una lezione con `kind: 'sfida'` non blocca il percorso, non consuma vite e si apre quando sono finite le lezioni che la precedono. Le modalità del correttore (`code`), eseguito da `tools/harness.py` dentro Python nel browser:
+
+| `mode` | campi | cosa controlla |
+|---|---|---|
+| `func` | `func`, `tests: [{ call, expect | raises, desc?, files? }]`, `files`? | chiama la funzione dell’utente: `call` ed `expect` sono espressioni Python; `raises` è il nome di un’eccezione attesa |
+| `io` | `tests: [{ stdin?, argv?, out, desc? }]` | esegue il programma intero con l’input e gli argomenti dati e confronta l’output riga per riga |
+| `tests` | `module`, `impl`, `mutants: [{ desc, code }]`, `min_tests` | l’utente scrive le funzioni `test_…`; devono passare su `impl` e fallire su ogni versione in `mutants` |
+
+`node tools/check.js` esegue ogni sfida con Python 3, se installato: la soluzione deve superare tutti i test, il codice iniziale (`starter`) no. Con `--no-python` salta questo passaggio.
 
 **Regola d’oro:** ogni esercizio deve poter essere risolto con le schede di teoria che lo precedono, nella stessa lezione o in quelle prima. Metti la scheda subito prima del primo esercizio che usa quel concetto.
 

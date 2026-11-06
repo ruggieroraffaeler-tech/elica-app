@@ -119,6 +119,34 @@ zcat reads.fastq.gz | wc -l           # righe totali` },
         { t: "info", title: "Contare gli allineamenti", text: "`samtools view -c aln.bam` conta le **righe di allineamento**. Una read può averne più di una: allineamenti *secondari* (altre posizioni possibili) e *supplementari* (read spezzate in più punti).\n\nPer contare solo gli allineamenti **primari**, uno per read allineata, si escludono gli altri con il filtro `-F 0x900`.", code: `samtools view -c aln.bam            # tutte le righe
 samtools view -c -F 0x900 aln.bam   # solo primari` },
         { t: "mc", q: "Cosa conta samtools view -c aln.bam?", opts: ["Le righe di allineamento, compresi secondari e supplementari", "Esattamente il numero di read sequenziate", "I cromosomi"], a: 0, why: "Una read può avere più righe. Per contare solo gli allineamenti primari: samtools view -c -F 0x900." }
+    ]},
+    { id: "s8s", kind: "sfida", title: "Missione · Il terminale sul tuo computer", sub: "File, grep e pipe dal vivo", ex: [
+        { t: "info", title: "Come funziona una missione", text: "Le missioni si svolgono **sul tuo computer**, perché il terminale non può girare dentro l’app. Segui le istruzioni, esegui i comandi e **incolla il risultato** nel riquadro: l’app controlla se è corretto.\n\nCome nelle sfide hai a disposizione suggerimenti e, dopo un paio di tentativi, la soluzione." },
+        { t: "info", title: "Aprire il terminale", text: "**Mac**: apri l’app Terminale (la trovi con Spotlight). **Linux**: apri il Terminale. **Windows**: installa **Git Bash** (con Git, da git-scm.com) oppure **WSL**, e apri quello.\n\nCrea una cartella per gli esercizi e spostati dentro:", code: `mkdir -p ~/elica-missioni
+cd ~/elica-missioni`, note: "Copia solo i comandi: le righe che iniziano con `#`, che altrove indicano l’output atteso, non vanno eseguite. Sul Mac il terminale usa zsh, che per questi comandi funziona come Bash." },
+        {
+          t: "task",
+          q: "Conta le sequenze",
+          text: "Questo comando crea un file FASTA chiamato `prova.fa`. Eseguilo, poi usa **grep** per contare quante sequenze contiene.",
+          points: ["Controlla il contenuto con `cat prova.fa`.", "Conta le righe di intestazione con l’opzione giusta di `grep`.", "Scrivi nel riquadro solo il numero."],
+          code: `printf ">s1\\nATGC\\n>s2\\nGGCC\\n>s3\\nTTAA\\n" > prova.fa`,
+          ans: ["3"],
+          hints: ["Ogni sequenza ha una riga che inizia con `>`.", "`grep -c` conta le righe che contengono un testo.", "`grep -c \">\" prova.fa` (le virgolette attorno a `>` sono importanti)."],
+          solution: `grep -c ">" prova.fa`,
+          why: "Il comando stampa `3`: le righe che contengono `>` sono le tre intestazioni. Senza virgolette, `>` verrebbe interpretato come “manda l’output in un file”."
+        },
+        {
+          t: "task",
+          q: "Varianti per cromosoma",
+          text: "Questo comando crea un piccolo file di varianti, `v.vcf`, separato da tab, con una riga di intestazione che inizia con `#`.\n\nScrivi una **pipe** che toglie l’intestazione, prende la prima colonna e conta le varianti per cromosoma. Incolla l’output completo.",
+          points: ["`grep -v` tiene le righe che **non** contengono il testo; `^#` significa “# all’inizio della riga”.", "Ti servono anche `cut`, `sort` e `uniq -c`."],
+          code: `printf "#CHROM\\tPOS\\nchr1\\t10\\nchr2\\t20\\nchr1\\t30\\nchr1\\t40\\n" > v.vcf`,
+          ans: ["3 chr1\n1 chr2"],
+          multiline: true,
+          hints: ["Il primo pezzo è `grep -v \"^#\" v.vcf`.", "Poi `| cut -f1` per la prima colonna.", "Poi `| sort | uniq -c`: `uniq` conta solo le righe uguali consecutive, per questo serve `sort` prima."],
+          solution: `grep -v "^#" v.vcf | cut -f1 | sort | uniq -c`,
+          why: "L’output è `3 chr1` e `1 chr2`, su due righe (gli spazi prima dei numeri non contano). Ogni comando fa una cosa sola e la pipe li collega: filtra, taglia, ordina, conta."
+        }
     ]}
   ]}
   ]

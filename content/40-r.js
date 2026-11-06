@@ -127,6 +127,37 @@ p.adjust(p, method = "BH")   # 0.05 0.05 0.05 0.05 0.50` },
         { t: "mc", q: "20.000 geni, nessuno cambia davvero, soglia 0.05 senza correzione: quanti falsi positivi ti aspetti?", opts: ["Circa 1.000", "Circa 5", "0"], a: 0, why: "20.000 × 0.05 = 1.000." },
         { t: "fill", q: "Correggi con Benjamini-Hochberg.", code: `p.adjust(p, method = ___)`, bank: ["\"BH\"", "\"mean\"", "\"t\""], ans: ["\"BH\""], why: "BH è il metodo più usato in genomica." },
         { t: "mc", q: "Cosa controlla il metodo BH?", opts: ["Il False Discovery Rate", "La varianza", "La media"], a: 0, why: "FDR = frazione attesa di falsi positivi tra i risultati significativi." }
+    ]},
+    { id: "r8s", kind: "sfida", title: "Missione · R sul tuo computer", sub: "Filtrare e riassumere risultati veri", ex: [
+        { t: "info", title: "Come funziona una missione", text: "Le missioni si svolgono **sul tuo computer**, perché R non può girare dentro l’app. Segui le istruzioni, esegui i comandi e **incolla il risultato** nel riquadro: l’app controlla se è corretto.\n\nCome nelle sfide hai a disposizione suggerimenti e, dopo un paio di tentativi, la soluzione." },
+        { t: "info", title: "Preparare R", text: "Ti servono due programmi gratuiti: **R**, da cran.r-project.org, e **RStudio Desktop**, da posit.co. Installa prima R, poi RStudio.\n\nSe preferisci non installare nulla, puoi usare **Posit Cloud** (posit.cloud), che fa girare RStudio nel browser.\n\nIn RStudio scrivi i comandi nella **Console**, in basso a sinistra, e premi Invio." },
+        {
+          t: "task",
+          q: "Quanti geni sono significativi?",
+          text: "Copia questi comandi nella console di R: creano una piccola tabella di risultati di espressione differenziale.\n\nPoi scrivi **tu** il filtro: quanti geni hanno `padj < 0.05` **e** un valore assoluto di `log2FC` maggiore di 1?",
+          points: ["Il valore assoluto in R si calcola con `abs()`.", "`nrow()` conta le righe di un data frame.", "Scrivi nel riquadro solo il numero."],
+          code: `ris <- data.frame(
+  gene   = c("TP53", "MYC", "EGFR", "BRCA1", "KRAS", "PTEN"),
+  log2FC = c(2.1, -1.4, 0.3, 1.8, -0.6, -2.5),
+  padj   = c(0.001, 0.03, 0.6, 0.2, 0.01, 0.004)
+)`,
+          ans: ["3", "[1] 3"],
+          hints: ["Per filtrare le righe: `ris[condizione, ]`. Le condizioni si combinano con `&`.", "La condizione completa è `ris$padj < 0.05 & abs(ris$log2FC) > 1`.", "`nrow(ris[ris$padj < 0.05 & abs(ris$log2FC) > 1, ])`"],
+          solution: `sig <- ris[ris$padj < 0.05 & abs(ris$log2FC) > 1, ]
+nrow(sig)          # [1] 3   (TP53, MYC, PTEN)`,
+          why: "BRCA1 ha un log2FC alto ma `padj` 0.2, KRAS è significativo ma cambia poco (|−0.6| < 1), EGFR né l’uno né l’altro."
+        },
+        {
+          t: "task",
+          q: "La media dei significativi",
+          text: "Usando la stessa tabella, calcola la **media del log2FC** dei geni significativi del passo precedente, arrotondata a **2 decimali**.",
+          points: ["`mean()` calcola la media, `round(x, 2)` arrotonda.", "Scrivi nel riquadro il numero che stampa R."],
+          ans: ["-0.6", "-0.60", "[1] -0.6"],
+          hints: ["Prendi prima il data frame filtrato `sig` del passo precedente.", "La colonna dei log2FC è `sig$log2FC`.", "`round(mean(sig$log2FC), 2)`"],
+          solution: `sig <- ris[ris$padj < 0.05 & abs(ris$log2FC) > 1, ]
+round(mean(sig$log2FC), 2)   # [1] -0.6`,
+          why: "(2.1 − 1.4 − 2.5) / 3 = −1.8 / 3 = −0.6. Due geni su tre sono sottoespressi, quindi la media è negativa."
+        }
     ]}
   ]}
   ]

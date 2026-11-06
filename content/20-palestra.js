@@ -228,6 +228,85 @@ def test_zero_iniziale():
         { t: "type", q: "Con id_valido della lezione precedente, scrivi cosa stampa.", code: `prove = ["ABC-1", "AB-12", "ABC-0"]
 print([id_valido(p) for p in prove])`, ans: ["[True, False, False]"], why: "\"AB-12\" ha solo due lettere; \"ABC-0\" inizia con zero." },
         { t: "mc", q: "Cosa succede se dimentichi from labid import id_valido?", opts: ["NameError quando pytest esegue i test", "I test passano comunque", "pytest lo importa da solo"], a: 0, why: "Il nome id_valido non esiste nel file di test." }
+    ]},
+    { id: "g9s", kind: "sfida", title: "Sfida finale della Palestra", sub: "Due validatori da scrivere da zero", ex: [
+        { t: "info", title: "Come funziona una sfida", text: "Qui scrivi tu il codice da zero, come in un vero programma. Premi **Verifica**: un correttore automatico esegue il tuo codice su vari casi di prova e ti dice quali funzionano, cosa si aspettava e cosa ha ottenuto. Se c’è un errore, te lo spiega.\n\nSe sei bloccato, apri i **suggerimenti** uno alla volta. La **soluzione** si sblocca dopo un paio di tentativi: guardala solo alla fine, e poi riscrivila con parole tue.", points: ["Le sfide non consumano vite e non bloccano il percorso: puoi farle quando vuoi.", "Il codice resta salvato anche se chiudi la lezione.", "Se non la completi, o se hai dovuto guardare la soluzione, la ritrovi nel Ripasso tra le “sfide da riprovare”: rifalla da solo dopo qualche giorno."] },
+        {
+          t: "code",
+          q: "Codice di un ceppo batterico",
+          mode: "func",
+          func: "ceppo_valido",
+          text: "Nel laboratorio i ceppi hanno codici come `EC-1024`. Scrivi un validatore con le tecniche della Palestra: una regola alla volta, `return False` appena qualcosa non va.",
+          points: ["Inizia con **2 lettere maiuscole**;", "poi un **trattino**;", "poi **da 3 a 6 cifre**;", "la **prima cifra non è 0**;", "nient’altro (quindi la lunghezza totale va da 6 a 9).", "`ceppo_valido(s)` restituisce `True` o `False`."],
+          starter: `def ceppo_valido(s):
+    pass
+`,
+          tests: [
+            {"call":"ceppo_valido(\"EC-1024\")","expect":"True"},
+            {"call":"ceppo_valido(\"EC-102\")","expect":"True","desc":"3 cifre: il minimo"},
+            {"call":"ceppo_valido(\"EC-102400\")","expect":"True","desc":"6 cifre: il massimo"},
+            {"call":"ceppo_valido(\"EC-10\")","expect":"False","desc":"2 cifre"},
+            {"call":"ceppo_valido(\"EC-1024000\")","expect":"False","desc":"7 cifre"},
+            {"call":"ceppo_valido(\"EC-0102\")","expect":"False","desc":"zero iniziale"},
+            {"call":"ceppo_valido(\"ec-1024\")","expect":"False","desc":"minuscole"},
+            {"call":"ceppo_valido(\"E-1024\")","expect":"False"},
+            {"call":"ceppo_valido(\"EC1024\")","expect":"False","desc":"manca il trattino"},
+            {"call":"ceppo_valido(\"EC-10a4\")","expect":"False"},
+            {"call":"ceppo_valido(\"\")","expect":"False","desc":"stringa vuota"},
+            {"call":"ceppo_valido(\"ECO-1024\")","expect":"False"}
+          ],
+          hints: ["Controlla per prima la lunghezza (`6 <= len(s) <= 9`): così `s[2]` e `s[3:]` esistono sempre.", "Le lettere sono `s[:2]` (`isalpha()` e `isupper()`), il trattino è `s[2]`, le cifre sono `numeri = s[3:]`.", "Per le cifre: `numeri.isdigit()`, poi `numeri[0] == \"0\"` per lo zero iniziale. In fondo, `return True`."],
+          solution: `def ceppo_valido(s):
+    if not 6 <= len(s) <= 9:
+        return False
+    if not (s[:2].isalpha() and s[:2].isupper()):
+        return False
+    if s[2] != "-":
+        return False
+    numeri = s[3:]
+    if not numeri.isdigit():
+        return False
+    if numeri[0] == "0":
+        return False
+    return True
+`,
+          why: "La lunghezza tra 6 e 9 insieme agli altri controlli garantisce da 3 a 6 cifre. Ogni regola è un blocco separato e il `return True` sta in fondo, fuori da tutti gli `if`."
+        },
+        {
+          t: "code",
+          q: "Password robusta",
+          mode: "func",
+          func: "password_robusta",
+          text: "Scrivi una funzione che controlla se una password è abbastanza robusta. Qui ti servono le domande “c’è **almeno un**…?”: pensa ai flag, oppure ad `any()`.",
+          points: ["Almeno **8 caratteri**;", "almeno una **cifra**;", "almeno una lettera **maiuscola** e almeno una **minuscola**;", "**nessuno spazio**.", "`password_robusta(p)` restituisce `True` o `False`."],
+          starter: `def password_robusta(p):
+    pass
+`,
+          tests: [
+            {"call":"password_robusta(\"Biologia2026\")","expect":"True"},
+            {"call":"password_robusta(\"Abcdefg1\")","expect":"True","desc":"8 caratteri esatti"},
+            {"call":"password_robusta(\"biologia2026\")","expect":"False","desc":"nessuna maiuscola"},
+            {"call":"password_robusta(\"BIOLOGIA2026\")","expect":"False","desc":"nessuna minuscola"},
+            {"call":"password_robusta(\"Biologia\")","expect":"False","desc":"nessuna cifra"},
+            {"call":"password_robusta(\"Bio 2026x\")","expect":"False","desc":"contiene uno spazio"},
+            {"call":"password_robusta(\"Ab1\")","expect":"False","desc":"troppo corta"}
+          ],
+          hints: ["Una regola alla volta, con `return False` appena una fallisce.", "“Almeno una cifra”: `any(c.isdigit() for c in p)`. Allo stesso modo `isupper()` e `islower()`.", "“Nessuno spazio”: `if \" \" in p: return False`."],
+          solution: `def password_robusta(p):
+    if len(p) < 8:
+        return False
+    if " " in p:
+        return False
+    if not any(c.isdigit() for c in p):
+        return False
+    if not any(c.isupper() for c in p):
+        return False
+    if not any(c.islower() for c in p):
+        return False
+    return True
+`,
+          why: "`any(...)` è la scorciatoia del flag “almeno uno”: sostituisce un ciclo con una variabile che parte da `False`."
+        }
     ]}
   ]}
   ]
