@@ -35,6 +35,7 @@ const I = {
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
   redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 3.5v5h5"/></svg>',
   close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg>',
   helix: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2c0 6 10 6 10 10S7 16 7 22M17 2c0 6-10 6-10 10s10 4 10 10"/><path d="M9 5.5h6M9 18.5h6" stroke-width="1.5"/></svg>',
   cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/></svg>'
 };
@@ -236,10 +237,11 @@ function pathHTML() {
     h += `<div class="unit"><div class="unit-t">${u.title.startsWith('Settimana') ? escH(u.title) : `Unità ${ui + 1} · ${escH(u.title)}`} · ${ud}/${u.lessons.length}</div><div class="path">`;
     u.lessons.forEach(l => {
       const i = idx++, done = !!S.done[l.id], cur = !lk && i === firstOpen, lock = lk || (!done && !cur);
-      h += `<button class="les ${done && !lk ? 'done' : cur ? 'cur' : 'lock'}" ${lock ? 'disabled' : ''} data-act="lesson" data-id="${l.id}">
+      const canRead = !lock && l.ex.some(e => e.t === 'info');
+      h += `<div class="lrow"><button class="les ${done && !lk ? 'done' : cur ? 'cur' : 'lock'}" ${lock ? 'disabled' : ''} data-act="lesson" data-id="${l.id}">
         <span class="dot">${done && !lk ? I.check : lock ? I.lock : String(i + 1).padStart(2, '0')}</span>
         <span><div class="t">${escH(l.title)}</div><div class="s">${escH(l.sub)}${done ? ' · ripassa' : ''}</div></span>
-        ${cur ? '<span class="go">Inizia</span>' : ''}</button>`;
+        ${cur ? '<span class="go">Inizia</span>' : ''}</button>${canRead ? `<button class="thb" data-act="theory" data-id="${l.id}" title="Rileggi la teoria" aria-label="Rileggi la teoria di ${escA(l.title)}">${I.book}</button>` : ''}</div>`;
     });
     h += '</div></div>';
   });
@@ -324,7 +326,7 @@ function showEx() {
   const origin = it.src !== 'new' ? ` · ${escH(XIDX[it.k] ? XIDX[it.k].l.title : '')}` : '';
   const tag = it.src === 'err' ? '<span class="tag err">Errore</span>' : it.src === 'due' ? '<span class="tag">Ripasso</span>' : '';
   let h = `<div class="pop"><div class="kind">${tag}<span>${kinds[ex.t] || ''}${origin}</span></div><div class="q">${escH(ex.t === 'info' ? ex.title : ex.q)}</div>`;
-  if (ex.t === 'info') { h += `<div class="txt">${escH(ex.text)}</div>${ex.code ? `<pre class="code">${hl(ex.code)}</pre>` : ''}`; setFoot('', 'Continua'); }
+  if (ex.t === 'info') { h += infoBody(ex); setFoot('', 'Continua'); }
   if (ex.t === 'mc') {
     L.state = { sel: null, order: shuffle(ex.opts.map((_, i) => i)) };
     if (ex.code) h += `<pre class="code">${hl(ex.code)}</pre>`;
@@ -363,6 +365,26 @@ function showEx() {
     tin.onkeydown = e => { if (e.key === 'Enter' && tin.value.trim()) { e.preventDefault(); e.stopPropagation(); tin.blur(); BTN.click(); } };
     if (matchMedia('(min-width:900px)').matches) setTimeout(() => tin.focus(), 50);
   }
+}
+/* testo con `codice` in linea e paragrafi separati da una riga vuota */
+const rich = s => escH(s).split(/(`[^`]+`)/).map(p => p.startsWith('`') && p.endsWith('`') && p.length > 1
+  ? `<code>${p.slice(1, -1)}</code>` : p.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?![*\w])/g, '$1<em>$2</em>')).join('');
+function infoBody(ex) {
+  let h = String(ex.text || '').split(/\n\s*\n/).map(p => `<p>${rich(p)}</p>`).join('');
+  h = `<div class="txt">${h}</div>`;
+  if (ex.points) h += `<ul class="pts">${ex.points.map(p => `<li>${rich(p)}</li>`).join('')}</ul>`;
+  if (ex.code) h += `<pre class="code">${hl(ex.code)}</pre>`;
+  if (ex.note) h += `<div class="box warn"><b>Attenzione</b>${rich(ex.note)}</div>`;
+  if (ex.cpp) h += `<div class="box cpp"><b>Se vieni dal C++</b>${rich(ex.cpp)}</div>`;
+  return h;
+}
+function openTheory(lid) {
+  const r = LIDX[lid]; if (!r) return;
+  const cards = r.l.ex.filter(e => e.t === 'info');
+  openModal(`<div class="kind">Teoria · ${escH(r.c.name)}</div><h2>${escH(r.l.title)}</h2>
+    ${cards.map(e => `<div class="thcard"><h3>${escH(e.title)}</h3>${infoBody(e)}</div>`).join('')}
+    <button class="btn" data-act="modal-close">Chiudi</button>`);
+  $('#modal .sheet').scrollTop = 0;
 }
 function drawFill(ex) {
   const st = L.state, parts = ex.code.split('___'), next = st.fill.indexOf(null);
@@ -421,7 +443,8 @@ function check() {
     L.failed.add(qi); noteErr(it.k); srsMiss(it.k);
     if (L.costs) { S.hearts = Math.max(0, S.hearts - 1); if (S.hearts === HMAX - 1) S.hTs = Date.now(); if (S.hearts <= 0) L.dead = true; }
     L.queue.push(qi);
-    FB.innerHTML = `<h3>Non proprio</h3><p>${ex.t === 'order' ? '' : sol + '<br>'}${escH(ex.why)}</p>`;
+    const lid = XIDX[it.k] && XIDX[it.k].l.id, hasTh = lid && LIDX[lid].l.ex.some(e => e.t === 'info');
+    FB.innerHTML = `<h3>Non proprio</h3><p>${ex.t === 'order' ? '' : sol + '<br>'}${escH(ex.why)}</p>${hasTh ? `<button class="fblink" data-act="theory" data-id="${lid}">${I.book}Rileggi la teoria</button>` : ''}`;
     setFoot('ko', 'Continua');
   }
   save(); hud();
@@ -466,7 +489,7 @@ function finish() {
 
 /* tastiera (PC e iPad con tastiera) */
 document.addEventListener('keydown', e => {
-  if (!$('.modal.hidden') && e.key === 'Escape') { closeModal(); return; }
+  if (!$('#modal').classList.contains('hidden')) { if (e.key === 'Escape') closeModal(); return; }
   if (!L || $('#lesson').classList.contains('hidden')) return;
   if (e.key === 'Escape') { closeLesson(); return; }
   const tg = (e.target.tagName || '').toLowerCase(), inInput = tg === 'input' || tg === 'textarea';
@@ -739,6 +762,7 @@ document.addEventListener('click', e => {
     case 'goal': S.goal = +id; save(); render(); break;
     case 'sesslen': S.sessLen = id; save(); render(); break;
     case 'news': showNews(true); break;
+    case 'theory': openTheory(id); break;
     case 'export': downloadBackup(); break;
     case 'copy': copyCode(); break;
     case 'import-open': $('#imp').classList.toggle('hidden'); break;

@@ -1,8 +1,15 @@
 /* Versione dell'app e novità.
    Quando pubblichi un aggiornamento: alza APP_VERSION, aggiungi una voce in cima
    a CHANGELOG e lancia `python3 tools/build.py` (aggiorna anche sw.js). */
-ELICA.APP_VERSION = '3.0.2';
+ELICA.APP_VERSION = '3.1.0';
 ELICA.CHANGELOG = [
+  { v: '3.1.0', date: '2026-11-06', items: [
+    'Teoria riscritta e molto più completa in tutti i corsi: 2–5 schede per lezione, alternate agli esercizi',
+    'R, Bash, Biopython e pandas spiegati da zero, senza dare nulla per scontato',
+    'Riquadri “Attenzione” sugli errori tipici e “Se vieni dal C++” sulle differenze con Python',
+    'Pulsante per rileggere la teoria di ogni lezione dal percorso e dopo una risposta sbagliata',
+    'Controllo di copertura: ogni esercizio usa solo concetti già spiegati'
+  ]},
   { v: '3.0.2', date: '2026-11-05', items: [
     'Sincronizzazione: chiarito che il Gist è “segreto” (non elencato), non privato',
     'La pagina chiede ai motori di ricerca di non indicizzarla'

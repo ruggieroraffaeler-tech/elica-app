@@ -1,6 +1,6 @@
 /* Elica — service worker: rende l'app disponibile offline e gestisce gli aggiornamenti.
    VERSION e FILES vengono riscritti da tools/build.py: non modificarli a mano. */
-const VERSION = '3.0.2-6b1035a8';
+const VERSION = '3.1.0-aa515f5b';
 const FILES = [
   './',
   'index.html',

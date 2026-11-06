@@ -1,6 +1,6 @@
 # Come sono stati verificati i contenuti
 
-Ultima verifica: 4 novembre 2026, versione 3.0.1. Gli esercizi sono 407.
+Ultima verifica: 6 novembre 2026, versione 3.1.0. Ci sono 217 schede di teoria e 337 esercizi.
 
 ## Verificato eseguendo il codice
 
@@ -11,6 +11,12 @@ Ultima verifica: 4 novembre 2026, versione 3.0.1. Gli esercizi sono 407.
 | Bash | bash, awk, sed, grep, gzip | Conteggio di FASTA e FASTQ, `wc -c`, awk per colonne, sed con e senza `g`, `sort \| uniq -c`, script con shebang |
 | Git | git 2.43 | `diff` e `diff --staged`, `restore`, `.gitignore` con file già tracciati, `rm --cached`, `switch -c`, merge, conflitti, tag |
 | Pipeline | DIAMOND 2.1.9, BLAST+ 2.12, bwa, samtools | Tutti i comandi delle lezioni del Progetto su dati di prova: makedb, blastp con `--outfmt 6` (12 colonne), `--id` e `--query-cover`, makeblastdb, tblastn, bwa index/mem, samtools sort/index/view |
+
+## Teoria (versione 3.1.0)
+
+- **Codice delle schede:** eseguito tutto quello che si può eseguire. Python e Biopython/pandas con l’output confrontato con i commenti; R con Rscript (dplyr, ggplot2, Biostrings); Bash in una cartella di prova con file di esempio. Fanno eccezione gli esempi che dipendono da file del progetto (`gc_tools`, `labid`) o dal terminale interattivo.
+- **Copertura:** ogni funzione, metodo o risposta da completare usati in un esercizio compaiono in una scheda precedente dello stesso corso. Le lacune trovate sono state colmate. Esempi: `isalnum` e `isupper` nella Palestra prima della lezione dedicata; `read()` prima dell’esercizio sui file; la distanza di Hamming prima dell’esercizio che la usa; un esercizio della prima lezione che usava `strip`, `title` e le f-string prima di averle spiegate.
+- **Opzioni di DIAMOND citate** (`--sensitive`, `--more-sensitive`): verificate eseguendole.
 
 ## Verificato sulle fonti
 

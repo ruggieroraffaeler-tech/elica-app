@@ -105,7 +105,7 @@ Gli `id` delle lezioni devono essere unici e **non vanno mai cambiati**, perché
 
 | tipo | campi | cosa fa |
 |---|---|---|
-| `info` | `title`, `text`, `code`? | scheda di teoria |
+| `info` | `title`, `text`, `points`?, `code`?, `note`?, `cpp`? | scheda di teoria: nel testo una riga vuota separa i paragrafi, `` `codice` `` e `**grassetto**` sono formattati; `points` è un elenco puntato, `note` un riquadro “Attenzione”, `cpp` un riquadro “Se vieni dal C++” |
 | `mc` | `q`, `code`?, `opts`, `a` (indice), `mono`? | scelta multipla |
 | `fill` | `q`, `code` con `___`, `bank`, `ans` | completa gli spazi toccando i pezzi |
 | `order` | `q`, `lines` (in ordine giusto) | riordina le righe |
@@ -113,6 +113,8 @@ Gli `id` delle lezioni devono essere unici e **non vanno mai cambiati**, perché
 | `bug` | `q`, `lines`, `bad` (indice) | tocca la riga sbagliata |
 
 Nelle stringhe di codice usa `\n` per andare a capo e `\\n` per mostrare un `\n` letterale.
+
+**Regola d’oro:** ogni esercizio deve poter essere risolto con le schede di teoria che lo precedono, nella stessa lezione o in quelle prima. Metti la scheda subito prima del primo esercizio che usa quel concetto.
 
 ## 7. Scorciatoie (PC e iPad con tastiera)
 
