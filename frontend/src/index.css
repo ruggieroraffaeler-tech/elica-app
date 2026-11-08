@@ -1,0 +1,207 @@
+/* I font Google ora sono caricati in public/index.html in modo NON bloccante:
+   con rete scarsa l'app si mostra subito (con font di sistema) invece di restare bianca. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    /* ===== MODALITÀ GIORNO (chiara) =====
+       Palette LC Performance: verde e nero, toni caldi e piatti (niente gradienti) */
+    :root {
+        --background: 72 14% 93%;
+        --foreground: 80 9% 7%;
+        --card: 0 0% 100%;
+        --card-foreground: 80 9% 7%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 80 9% 7%;
+        --primary: 142 72% 29%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 77 13% 89%;
+        --secondary-foreground: 80 9% 7%;
+        --muted: 77 13% 89%;
+        --muted-foreground: 87 5% 38%;
+        --accent: 142 76% 36%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
+        --success: 142 76% 36%;
+        --success-foreground: 0 0% 100%;
+        --border: 78 14% 85%;
+        --input: 76 12% 82%;
+        --ring: 142 76% 36%;
+        --chart-1: 142 76% 36%;
+        --chart-2: 175 77% 26%;
+        --chart-3: 32 95% 44%;
+        --chart-4: 215 19% 35%;
+        --chart-5: 347 77% 50%;
+        --radius: 0.75rem;
+        color-scheme: light;
+    }
+
+    /* ===== MODALITÀ NOTTE (scura) ===== */
+    .dark {
+        --background: 90 9% 4%;
+        --foreground: 80 15% 92%;
+        --card: 100 7% 8%;
+        --card-foreground: 80 15% 92%;
+        --popover: 100 6% 9%;
+        --popover-foreground: 80 15% 92%;
+        --primary: 142 71% 45%;
+        --primary-foreground: 90 9% 4%;
+        --secondary: 96 8% 12%;
+        --secondary-foreground: 80 15% 92%;
+        --muted: 96 8% 12%;
+        --muted-foreground: 82 6% 61%;
+        --accent: 142 71% 45%;
+        --accent-foreground: 90 9% 4%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --success: 142 71% 45%;
+        --success-foreground: 90 9% 4%;
+        --border: 100 8% 15%;
+        --input: 94 7% 19%;
+        --ring: 142 71% 45%;
+        --chart-1: 142 71% 45%;
+        --chart-2: 172 66% 50%;
+        --chart-3: 43 96% 56%;
+        --chart-4: 215 20% 65%;
+        --chart-5: 351 95% 71%;
+        color-scheme: dark;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    /* Proporzioni sul telefono: tutto un po' più compatto (testi, spazi, pulsanti e icone
+       sono in "rem", quindi si riducono insieme e restano in proporzione) */
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+    @media (max-width: 640px) {
+        html { font-size: 15px; }
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Oswald', 'Arial Narrow', system-ui, sans-serif;
+        letter-spacing: -0.02em;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Animation utilities */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile bottom nav safe area */
+.pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Card hover effect */
+.card-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .card-hover:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Grafici (recharts) leggibili anche in modalità notte ===== */
+.recharts-cartesian-grid line {
+    stroke: hsl(var(--border));
+}
+
+.recharts-cartesian-axis-tick-value,
+.recharts-cartesian-axis-tick text {
+    fill: hsl(var(--muted-foreground));
+}
+
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {
+    stroke: hsl(var(--border));
+}
+
+.recharts-default-tooltip {
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--popover-foreground)) !important;
+    border-radius: 0.5rem;
+}
+
+/* Correzione grafico "ciambella" dei macro: il centro usava var(--background) senza hsl()
+   e risultava nero. Così segue il tema (vale anche per la pagina admin). */
+svg circle[fill="var(--background)"] {
+    fill: hsl(var(--background));
+}
+
+svg circle[fill="var(--card)"] {
+    fill: hsl(var(--card));
+}
+
+/* Input data/numero: icone native del colore giusto in modalità notte */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+/* Linee dei grafici del peso/misure: verde del tema invece del vecchio blu */
+.recharts-line path[stroke="#3b82f6"],
+.recharts-line circle[stroke="#3b82f6"] {
+    stroke: hsl(var(--accent));
+}
+.recharts-line circle[stroke="#3b82f6"] {
+    fill: hsl(var(--card));
+}
+
+/* Schede (Card) meno "gonfie" sul telefono */
+@media (max-width: 640px) {
+    .p-6 { padding: 1rem; }
+    .pt-0 { padding-top: 0; }
+    .px-6 { padding-left: 1rem; padding-right: 1rem; }
+    .py-8 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+    .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+    .gap-6 { gap: 1rem; }
+}
+
+/* Barra in alto: stesso fondo della pagina (non più bianca), con una linea sottile */
+header.bg-card {
+    background-color: hsl(var(--background) / 0.92);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    backdrop-filter: saturate(140%) blur(10px);
+}

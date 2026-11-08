@@ -1,0 +1,4 @@
+Modello di riconoscimento della postura (MediaPipe Pose 0.5.1675469404, licenza Apache 2.0, Google).
+Serve alla stima delle misure dalle foto nella sezione Visite (pagina admin).
+Gira interamente nel browser: le foto non vengono inviate a nessun servizio esterno.
+Non modificare né rinominare questi file.

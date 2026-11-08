@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="it">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#eff0eb" />
+        <meta name="description" content="LC Performance - Coaching Fitness" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+        <!-- Icona LC Performance (scheda del browser, schermata Home di iPhone e Android) -->
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="48x48" />
+        <link rel="icon" href="%PUBLIC_URL%/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="LC Performance" />
+        <meta name="application-name" content="LC Performance" />
+
+        <!-- Applica subito il tema (giorno/notte) per evitare il "lampo" bianco all'apertura -->
+        <script>
+            (function () {
+                try {
+                    var t = localStorage.getItem('lc-theme');
+                    var dark = t === 'dark' || ((!t || t === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    var root = document.documentElement;
+                    if (dark) root.classList.add('dark');
+                    root.style.colorScheme = dark ? 'dark' : 'light';
+                    var meta = document.querySelector('meta[name="theme-color"]');
+                    if (meta) meta.setAttribute('content', dark ? '#0b0c0a' : '#eff0eb');
+                    var icon = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+                    if (icon) icon.setAttribute('href', dark ? '%PUBLIC_URL%/favicon-dark.svg' : '%PUBLIC_URL%/favicon-light.svg');
+                    // iPhone/iPad: evita che la pagina resti ingrandita dopo aver toccato un campo di testo
+                    // (lo zoom con due dita resta possibile)
+                    var ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                    if (ios) {
+                        var vp = document.querySelector('meta[name="viewport"]');
+                        if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover');
+                    }
+                } catch (e) {}
+            })();
+        </script>
+
+        <!-- Font caricati senza bloccare la pagina (con rete scarsa l'app si vede subito) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Manrope:wght@400;500;600&family=Inter:wght@600&display=swap"
+            media="print"
+            onload="this.media='all'"
+        />
+        <noscript>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Manrope:wght@400;500;600&family=Inter:wght@600&display=swap" />
+        </noscript>
+        <title>LC Performance</title>
+    </head>
+    <body>
+        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <div id="root"></div>
+    </body>
+</html>
